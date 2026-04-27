@@ -45,7 +45,7 @@ class AIService:
 
         try:
             response = self.client.models.generate_content(
-                model="gemini-1.5-flash", contents=contents, config=self.config
+                model="gemini-1.5-flash-latest", contents=contents, config=self.config
             )
 
             return json.loads(response.text)
