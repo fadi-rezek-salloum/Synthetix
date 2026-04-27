@@ -23,8 +23,16 @@ class ProductVariantInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "brand", "category", "base_price", "is_featured", "created_at")
-    list_filter = ("brand", "category", "gender", "is_featured")
+    list_display = (
+        "name",
+        "brand",
+        "vendor",
+        "category",
+        "base_price",
+        "is_active",
+        "is_featured",
+    )
+    list_filter = ("brand", "category", "gender", "is_featured", "is_active")
     search_fields = ("name", "brand", "description")
     prepopulated_fields = {"slug": ("name",)}
     inlines = [ProductImageInline, ProductVariantInline]
@@ -32,7 +40,18 @@ class ProductAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             "Basic Information",
-            {"fields": ("name", "slug", "brand", "category", "gender", "is_featured")},
+            {
+                "fields": (
+                    "vendor",
+                    "name",
+                    "slug",
+                    "brand",
+                    "category",
+                    "gender",
+                    "is_active",
+                    "is_featured",
+                )
+            },
         ),
         ("Pricing", {"fields": ("base_price", "discount_price")}),
         ("Descriptions", {"fields": ("description", "ai_description", "ai_style_tags")}),

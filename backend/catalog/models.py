@@ -74,6 +74,7 @@ class Product(models.Model):
     class Meta:
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
+        ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
