@@ -1,18 +1,17 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ShoppingBag, User, Search, Menu } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { ShoppingBag, User, LogOut } from "lucide-react";
+import UserMenu from "./UserMenu";
 
 const Navbar = () => {
+  const { user, logout } = useAuth();
+
   return (
-    <motion.nav
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6"
-    >
-      <div className="glass w-full max-w-7xl px-8 py-4 rounded-full flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-xl border-b border-white/5">
+      <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link
           href="/"
           className="text-2xl font-bold tracking-tighter hover:opacity-70 transition-opacity"
@@ -23,34 +22,36 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-10 text-sm font-medium tracking-widest uppercase">
           <Link
             href="/catalog"
-            className="hover:text-luxury-gold transition-colors"
+            className="hover:text-zinc-400 transition-colors"
           >
             Catalog
           </Link>
           <Link
-            href="/intelligence"
-            className="hover:text-luxury-gold transition-colors"
+            href="/identity"
+            className="hover:text-zinc-400 transition-colors"
           >
             Identity AI
           </Link>
           <Link
-            href="/about"
-            className="hover:text-luxury-gold transition-colors"
+            href="/collections"
+            className="hover:text-zinc-400 transition-colors"
           >
-            About
+            Collections
           </Link>
         </div>
 
         <div className="flex items-center gap-6">
-          <Search className="w-5 h-5 cursor-pointer hover:text-luxury-gold transition-colors" />
-          <Link href="/auth/login">
-            <User className="w-5 h-5 cursor-pointer hover:text-luxury-gold transition-colors" />
-          </Link>
-          <ShoppingBag className="w-5 h-5 cursor-pointer hover:text-luxury-gold transition-colors" />
-          <Menu className="md:hidden w-6 h-6 cursor-pointer" />
+          <button className="relative hover:opacity-70 transition-opacity">
+            <ShoppingBag className="w-5 h-5" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-black text-[10px] font-bold rounded-full flex items-center justify-center">
+              0
+            </span>
+          </button>
+
+          <UserMenu />
         </div>
       </div>
-    </motion.nav>
+    </nav>
   );
 };
 

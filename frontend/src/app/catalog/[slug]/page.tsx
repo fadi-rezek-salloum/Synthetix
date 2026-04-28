@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Product } from "@/types";
 import { productService } from "@/services/productService";
-import Navbar from "@/components/layout/navbar";
+import Navbar from "@/components/layout/Navbar";
 import { Sparkles, ShieldCheck, Zap } from "lucide-react";
 import ProductGallery from "@/components/ui/ProductGallery";
 

@@ -28,6 +28,9 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/synthetix
       - REDIS_URL=redis://redis:6379/0
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DJANGO_DEBUG=${DJANGO_DEBUG}
     depends_on:
       db:
         condition: service_healthy

@@ -130,3 +130,19 @@ CSRF_TRUSTED_ORIGINS = [
     FRONTEND_URL,
     "http://127.0.0.1:3000",
 ]
+
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+ACCOUNT_ADAPTER = "accounts.adapters.CustomAccountAdapter"
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.resend.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "resend"
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = "onboarding@resend.dev"
+
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True

@@ -2,22 +2,26 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const url = `${API_URL}${endpoint}`;
-
-  const headers = {
-    "Content-Type": "application/json",
-    ...options.headers,
-  };
-
-  const response = await fetch(url, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || "An error occurred");
+  const text = await response.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (e) {
+    data = { non_field_errors: ["A server error occurred. Please check backend logs."] };
   }
 
-  return response.json();
+  if (!response.ok) {
+    throw data;
+  }
+
+  return data;
 }

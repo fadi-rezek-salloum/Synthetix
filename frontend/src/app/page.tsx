@@ -1,4 +1,4 @@
-import Navbar from "@/components/layout/navbar";
+import Navbar from "@/components/layout/Navbar";
 import Hero from "@/components/sections/hero";
 import ProductGrid from "@/components/sections/ProductGrid";
 
