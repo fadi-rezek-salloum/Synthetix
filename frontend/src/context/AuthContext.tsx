@@ -20,23 +20,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is already logged in on mount
+    // Initial user fetch
     authService
       .getUser()
       .then(setUser)
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  }, []);
+
+    // Multi-tab synchronization
+    const syncTabs = (event: StorageEvent) => {
+      if (event.key === "synthetix_auth_sync") {
+        setLoading(true);
+        authService
+          .getUser()
+          .then(setUser)
+          .catch(() => {
+            setUser(null);
+            if (window.location.pathname !== "/auth/login") {
+              router.push("/auth/login");
+            }
+          })
+          .finally(() => setLoading(false));
+      }
+    };
+
+    window.addEventListener("storage", syncTabs);
+    return () => window.removeEventListener("storage", syncTabs);
+  }, [router]);
 
   const login = (userData: any) => {
+    localStorage.setItem("synthetix_auth_sync", Date.now().toString());
     setUser(userData.user);
     router.push("/");
   };
 
   const logout = async () => {
-    await authService.logout();
-    setUser(null);
-    router.push("/auth/login");
+    localStorage.setItem("synthetix_auth_sync", Date.now().toString());
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+      router.push("/auth/login");
+    }
   };
 
   return (

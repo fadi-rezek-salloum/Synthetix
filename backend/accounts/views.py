@@ -1,18 +1,8 @@
-from allauth.account.views import ConfirmEmailView
-from django.http import Http404
 from rest_framework import generics, permissions, viewsets
 
 from .models import Address
 from .permissions import IsCustomer, IsSeller
 from .serializers import AddressSerializer, CustomerProfileSerializer, SellerProfileSerializer
-
-
-class CustomConfirmEmailView(ConfirmEmailView):
-    def get(self, *args, **kwargs):
-        try:
-            return super().get(*args, **kwargs)
-        except Http404:
-            raise Http404("Invalid confirmation link")
 
 
 class CustomerProfileView(generics.RetrieveUpdateAPIView):

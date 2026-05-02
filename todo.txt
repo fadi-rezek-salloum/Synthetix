@@ -1,3 +1,4 @@
 - fix error on registeration
 - prevent creating new account if there is an error
 - confirm enail not working detail not found as response
+- setup atomic requests in the database

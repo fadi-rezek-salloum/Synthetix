@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 export default function VerifyEmailPage() {
-  const { key } = useParams();
+  const searchParams = useSearchParams();
+  const key = searchParams.get("key");
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading",
@@ -14,16 +15,21 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     const verify = async () => {
-      console.log("Key:", key);
+      if (!key) {
+        setStatus("error");
+        return;
+      }
       try {
-        await apiFetch("/accounts/auth/registration/verify-email/", {
+        console.log("Verifying key:", key);
+        const response = await apiFetch("/accounts/auth/registration/verify-email/", {
           method: "POST",
           body: JSON.stringify({ key }),
         });
+        console.log("Verification response:", response);
         setStatus("success");
         setTimeout(() => router.push("/auth/login?verified=true"), 3000);
-      } catch (error) {
-        console.log(error);
+      } catch (error: any) {
+        console.error("Verification failed:", error);
         setStatus("error");
       }
     };

@@ -5,25 +5,33 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
 import Link from "next/link";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, EyeOff, Eye, AlertCircle } from "lucide-react";
+import { InputField } from "@/components/ui/Input";
 
 const LoginPage = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setErrors({});
 
     try {
       const data = await authService.login({ email, password });
       login(data);
     } catch (err: any) {
-      setError(err.message || "Invalid credentials");
+      if (err && typeof err === "object") {
+        setErrors(err);
+      } else {
+        setErrors({
+          non_field_errors: ["An unexpected connection error occurred."],
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -47,46 +55,59 @@ const LoginPage = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-            <input
-              type="email"
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-white/20 transition-all text-sm"
-              required
-            />
-          </div>
-
-          <div className="relative group">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-            <input
-              type="password"
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <InputField
+            icon={<Mail className="w-4 h-4" />}
+            type="email"
+            placeholder="Email Address"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            errors={errors.email || errors.detail}
+          />
+          <div className="relative">
+            <InputField
+              icon={<Lock className="w-4 h-4" />}
+              type={showPassword ? "text" : "password"}
               placeholder="Password"
+              autoComplete="current-password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-white/20 transition-all text-sm"
-              required
+              errors={errors.password || errors.non_field_errors}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-[18px] text-zinc-500 hover:text-white transition-colors"
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end px-2">
             <Link
               href="/auth/forgot-password"
-              className="text-xs text-zinc-500 hover:text-white transition-colors"
+              className="text-[10px] text-zinc-500 hover:text-white transition-colors font-medium"
             >
-              Forgot password?
+              Forgotten your credentials?
             </Link>
           </div>
 
-          {error && <p className="text-red-400 text-xs text-center">{error}</p>}
-
+          {errors.detail && !errors.email && (
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              {errors.detail}
+            </div>
+          )}
           <button
-            type="submit"
             disabled={loading}
-            className="w-full bg-white text-black font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-[0.98]"
+            className="w-full bg-white text-black font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-[0.98] mt-6 disabled:opacity-50"
           >
             {loading ? (
               "Authenticating..."
@@ -97,6 +118,23 @@ const LoginPage = () => {
             )}
           </button>
         </form>
+        <div className="mt-8 space-y-4 text-center text-sm text-zinc-500">
+          <p>
+            New here?{" "}
+            <Link
+              href="/auth/register"
+              className="text-white font-bold hover:underline"
+            >
+              Create Account
+            </Link>
+          </p>
+          <Link
+            href="/"
+            className="inline-block mt-4 text-xs text-zinc-600 hover:text-white transition-colors"
+          >
+            ← Back to Home
+          </Link>
+        </div>
 
         <div className="mt-8 flex items-center gap-4">
           <div className="h-px bg-white/10 flex-1" />

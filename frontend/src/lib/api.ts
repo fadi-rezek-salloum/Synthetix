@@ -1,27 +1,83 @@
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
+// Global locks and queues for silent refresh
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const onTokenRefreshed = (token: string) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
 export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  const executeRequest = async (): Promise<any> => {
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      ...options,
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
 
-  const text = await response.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch (e) {
-    data = { non_field_errors: ["A server error occurred. Please check backend logs."] };
-  }
+    const text = await response.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (e) {
+      data = { detail: "Server response was not valid JSON." };
+    }
 
-  if (!response.ok) {
-    throw data;
-  }
+    // Intercept 401 Unauthorized errors for automatic refresh
+    // We don't refresh if the error comes from the login or refresh endpoints themselves
+    if (
+      response.status === 401 &&
+      endpoint !== "/accounts/auth/login/" &&
+      endpoint !== "/accounts/auth/token/refresh/"
+    ) {
+      if (!isRefreshing) {
+        isRefreshing = true;
 
-  return data;
+        try {
+          const refreshRes = await fetch(
+            `${API_URL}/accounts/auth/token/refresh/`,
+            {
+              method: "POST",
+              credentials: "include",
+            },
+          );
+
+          if (refreshRes.ok) {
+            isRefreshing = false;
+            onTokenRefreshed("refreshed");
+            return await executeRequest();
+          }
+        } catch (refreshErr) {
+          isRefreshing = false;
+          // Let the 401 propagate if refresh fails
+        }
+      }
+
+      // If a refresh is already in progress, queue this request
+      return new Promise((resolve) => {
+        addRefreshSubscriber(() => {
+          resolve(executeRequest());
+        });
+      });
+    }
+
+    if (!response.ok) {
+      if (typeof data === "string") data = { detail: data };
+      throw data;
+    }
+
+    return data;
+  };
+
+  return executeRequest();
 }

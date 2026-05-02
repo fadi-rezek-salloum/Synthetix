@@ -15,6 +15,7 @@ import {
   AlertCircle,
   MailCheck,
 } from "lucide-react";
+import { InputField } from "@/components/ui/Input";
 
 const RegisterPage = () => {
   const { login } = useAuth();
@@ -50,11 +51,10 @@ const RegisterPage = () => {
       setUserEmail(formData.email);
       setRegistered(true);
     } catch (err: any) {
-      // Handle Django/DRF error objects
-      if (typeof err === "object") {
+      if (err && typeof err === "object") {
         setErrors(err);
       } else {
-        setErrors({ non_field_errors: ["An unexpected connection error occurred."] });
+        setErrors({ non_field_errors: ["An unexpected error occurred."] });
       }
     } finally {
       setLoading(false);
@@ -115,39 +115,36 @@ const RegisterPage = () => {
             "Become part of the curation."
           </p>
         </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField
             icon={<User className="w-4 h-4" />}
             type="text"
             placeholder="Full Name"
-            error={errors.first_name}
-            onChange={(val: string) => setFormData({ ...formData, name: val })}
+            errors={errors.first_name}
+            onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
           />
 
           <InputField
             icon={<Mail className="w-4 h-4" />}
             type="email"
             placeholder="Email Address"
-            error={errors.email}
-            onChange={(val: string) => setFormData({ ...formData, email: val })}
+            errors={errors.email}
+            onChange={(e: any) => setFormData({ ...formData, email: e.target.value })}
           />
 
           <div className="relative group">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-            <input
+            <InputField
+              icon={<Lock className="w-4 h-4" />}
               type={showPassword ? "text" : "password"}
               placeholder="Create Password"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 outline-none focus:border-white/20 transition-all text-sm"
-              onChange={(e) =>
-                setFormData({ ...formData, password1: e.target.value })
-              }
+              errors={errors.password1}
+              onChange={(e: any) => setFormData({ ...formData, password1: e.target.value })}
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+              className="absolute right-4 top-[18px] text-zinc-500 hover:text-white transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -155,28 +152,21 @@ const RegisterPage = () => {
                 <Eye className="w-4 h-4" />
               )}
             </button>
-            {errors.password1 && (
-              <p className="text-red-400 text-[10px] mt-1 ml-4">
-                {errors.password1[0]}
-              </p>
-            )}
           </div>
 
           <div className="relative group">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-            <input
+            <InputField
+              icon={<Lock className="w-4 h-4" />}
               type={showPassword2 ? "text" : "password"}
               placeholder="Confirm Password"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 outline-none focus:border-white/20 transition-all text-sm"
-              onChange={(e) =>
-                setFormData({ ...formData, password2: e.target.value })
-              }
+              errors={errors.password2}
+              onChange={(e: any) => setFormData({ ...formData, password2: e.target.value })}
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword2(!showPassword2)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+              className="absolute right-4 top-[18px] text-zinc-500 hover:text-white transition-colors"
             >
               {showPassword2 ? (
                 <EyeOff className="w-4 h-4" />
@@ -184,17 +174,14 @@ const RegisterPage = () => {
                 <Eye className="w-4 h-4" />
               )}
             </button>
-            {errors.password2 && (
-              <p className="text-red-400 text-[10px] mt-1 ml-4">
-                {errors.password2[0]}
-              </p>
-            )}
           </div>
 
           {errors.non_field_errors && (
             <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-[10px]">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              {Array.isArray(errors.non_field_errors) ? errors.non_field_errors[0] : errors.non_field_errors}
+              {Array.isArray(errors.non_field_errors)
+                ? errors.non_field_errors[0]
+                : errors.non_field_errors}
             </div>
           )}
 
@@ -218,39 +205,37 @@ const RegisterPage = () => {
             )}
           </button>
         </form>
+        <div className="mt-8 space-y-4 text-center text-sm text-zinc-500">
+          <p>
+            Already part of the curation?{" "}
+            <Link
+              href="/auth/login"
+              className="text-white font-bold hover:underline"
+            >
+              Log In
+            </Link>
+          </p>
 
-        <p className="mt-8 text-center text-sm text-zinc-500">
-          Want to sell?{" "}
+          <p>
+            Want to sell?{" "}
+            <Link
+              href="/auth/register-seller"
+              className="text-luxury-gold font-bold hover:underline"
+            >
+              Open a Boutique
+            </Link>
+          </p>
+
           <Link
-            href="/auth/register-seller"
-            className="text-luxury-gold font-bold hover:underline"
+            href="/"
+            className="inline-block mt-4 text-xs text-zinc-600 hover:text-white transition-colors"
           >
-            Open a Boutique
+            ← Back to Home
           </Link>
-        </p>
+        </div>
       </motion.div>
     </main>
   );
 };
-
-const InputField = ({ icon, type, placeholder, error, onChange }: any) => (
-  <div className="space-y-1">
-    <div className="relative group">
-      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-white transition-colors">
-        {icon}
-      </span>
-      <input
-        type={type}
-        placeholder={placeholder}
-        className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-white/20 transition-all text-sm"
-        onChange={(e) => onChange(e.target.value)}
-        required
-      />
-    </div>
-    {error && error.length > 0 && (
-      <p className="text-red-400 text-[10px] ml-4">{error[0]}</p>
-    )}
-  </div>
-);
 
 export default RegisterPage;

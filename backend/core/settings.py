@@ -74,8 +74,9 @@ DATABASES = {
     "default": dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
         conn_max_age=600,
-    )
+    ),
 }
+DATABASES["default"]["ATOMIC_REQUESTS"] = True
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -132,7 +133,6 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 
-FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 ACCOUNT_ADAPTER = "accounts.adapters.CustomAccountAdapter"
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -143,6 +143,19 @@ EMAIL_HOST_USER = "resend"
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = "onboarding@resend.dev"
 
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
