@@ -1,3 +1,18 @@
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  image: string | null;
+}
+
 export interface ProductImage {
   id: number;
   image: string;

@@ -12,7 +12,7 @@ const ProductGrid = () => {
   useEffect(() => {
     productService
       .getProducts()
-      .then(setProducts)
+      .then((data) => setProducts(data.results))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
