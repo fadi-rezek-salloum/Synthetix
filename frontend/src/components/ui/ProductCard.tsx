@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
+  priority?: boolean;
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product, priority = false }: ProductCardProps) => {
   const displayImage =
     product.images.find((img) => img.is_feature)?.image ||
     product.images[0]?.image;
@@ -35,6 +36,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               src={displayImage}
               alt={product.name}
               fill
+              priority={priority}
               className="object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (

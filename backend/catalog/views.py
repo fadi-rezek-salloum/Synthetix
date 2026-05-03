@@ -20,6 +20,22 @@ from .serializers import (
 )
 
 
+import django_filters
+from .models import Category, Product, ProductImage, ProductVariant, Review, StockLog
+
+class ProductFilter(django_filters.FilterSet):
+    min_price = django_filters.NumberFilter(field_name="base_price", lookup_expr='gte')
+    max_price = django_filters.NumberFilter(field_name="base_price", lookup_expr='lte')
+    category = django_filters.CharFilter(field_name="category__slug")
+    brand = django_filters.CharFilter(field_name="brand", lookup_expr='iexact')
+    gender = django_filters.CharFilter(field_name="gender", lookup_expr='iexact')
+    is_featured = django_filters.BooleanFilter(field_name="is_featured")
+
+    class Meta:
+        model = Product
+        fields = ['category', 'brand', 'gender', 'is_featured', 'min_price', 'max_price']
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     queryset = Category.objects.filter(parent=None)
@@ -36,11 +52,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     lookup_field = "slug"
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-
-    filterset_fields = ["category__slug", "brand", "gender", "is_featured"]
-
+    filterset_class = ProductFilter
     search_fields = ["name", "description", "brand"]
-
     ordering_fields = ["base_price", "created_at"]
 
     def get_queryset(self):
