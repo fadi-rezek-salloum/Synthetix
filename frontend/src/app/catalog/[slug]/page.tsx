@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Product } from "@/types";
 import { productService } from "@/services/productService";
-import Navbar from "@/components/layout/Navbar";
 import { Sparkles, ShieldCheck, Zap } from "lucide-react";
 import ProductGallery from "@/components/ui/ProductGallery";
 
@@ -38,7 +37,7 @@ const ProductPage = () => {
 
   return (
     <main className="min-h-screen bg-black">
-      <Navbar />
+
 
       <div className="max-w-7xl mx-auto px-6 pt-32 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-16">
         <ProductGallery images={product.images} />
@@ -65,7 +64,7 @@ const ProductPage = () => {
                 </span>
               </div>
               <p className="text-zinc-300 leading-relaxed italic">
-                "{product.ai_description}"
+                &quot;{product.ai_description}&quot;
               </p>
               <div className="flex flex-wrap gap-2 mt-6">
                 {product.ai_style_tags?.map((tag) => (

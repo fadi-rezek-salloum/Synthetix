@@ -33,8 +33,6 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
       data = { detail: "Server response was not valid JSON." };
     }
 
-    // Intercept 401 Unauthorized errors for automatic refresh
-    // We don't refresh if the error comes from the login or refresh endpoints themselves
     if (
       response.status === 401 &&
       endpoint !== "/accounts/auth/login/" &&
@@ -59,11 +57,9 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
           }
         } catch (refreshErr) {
           isRefreshing = false;
-          // Let the 401 propagate if refresh fails
         }
       }
 
-      // If a refresh is already in progress, queue this request
       return new Promise((resolve) => {
         addRefreshSubscriber(() => {
           resolve(executeRequest());

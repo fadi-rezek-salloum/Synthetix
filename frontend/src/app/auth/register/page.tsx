@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Mail,
@@ -16,6 +17,7 @@ import {
   MailCheck,
 } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
+import { SocialAuth } from "@/components/auth/SocialAuth";
 
 const RegisterPage = () => {
   const { login } = useAuth();
@@ -31,6 +33,14 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [registered, setRegistered] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+
+  React.useEffect(() => {
+    if (user && !authLoading) {
+      router.push("/");
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +122,7 @@ const RegisterPage = () => {
             Claim Your Identity
           </h1>
           <p className="text-zinc-500 text-sm italic">
-            "Become part of the curation."
+            &quot;Become part of the curation.&quot;
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -233,6 +243,8 @@ const RegisterPage = () => {
             ← Back to Home
           </Link>
         </div>
+
+        <SocialAuth />
       </motion.div>
     </main>
   );

@@ -32,4 +32,17 @@ export const authService = {
       body: JSON.stringify({ email }),
     });
   },
+
+  passwordResetConfirm: async (data: any) => {
+    return await apiFetch("/accounts/auth/password/reset/confirm/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  socialLogin: async (provider: "google", accessToken: string) => {
+    return await apiFetch(`/accounts/auth/${provider}/`, {
+      method: "POST",
+      body: JSON.stringify({ access_token: accessToken }),
+    });
+  },
 };

@@ -46,7 +46,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     window.addEventListener("storage", syncTabs);
     return () => window.removeEventListener("storage", syncTabs);
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const login = (userData: any) => {
     localStorage.setItem("synthetix_auth_sync", Date.now().toString());

@@ -1,8 +1,15 @@
 from dj_rest_auth.registration.views import ConfirmEmailView, VerifyEmailView
+from django.conf import settings
 from django.urls import include, path
+from django.views.generic import RedirectView
 from rest_framework.routers import DefaultRouter
 
-from .views import AddressViewSet, CustomerProfileView, SellerProfileView
+from .views import (
+    AddressViewSet,
+    CustomerProfileView,
+    GoogleLogin,
+    SellerProfileView,
+)
 
 router = DefaultRouter()
 router.register(r"addresses", AddressViewSet, basename="address")
@@ -15,6 +22,15 @@ urlpatterns = [
         ConfirmEmailView.as_view(),
         name="account_confirm_email",
     ),
+    path(
+        "auth/password-reset/confirm/<uidb64>/<token>/",
+        RedirectView.as_view(
+            url=f"{settings.FRONTEND_URL}/auth/password-reset-confirm/%(uidb64)s/%(token)s/",
+            permanent=False,
+        ),
+        name="password_reset_confirm",
+    ),
+    path("auth/google/", GoogleLogin.as_view(), name="google_login"),
     path("profile/customer/", CustomerProfileView.as_view(), name="customer-profile"),
     path("profile/seller/", SellerProfileView.as_view(), name="seller-profile"),
     path("", include(router.urls)),
