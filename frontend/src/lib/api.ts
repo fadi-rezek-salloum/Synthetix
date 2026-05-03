@@ -3,14 +3,14 @@ const API_URL =
 
 // Global locks and queues for silent refresh
 let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+let refreshSubscribers: ((status: string) => void)[] = [];
 
-const onTokenRefreshed = (token: string) => {
-  refreshSubscribers.forEach((callback) => callback(token));
+const onTokenRefreshed = (status: string) => {
+  refreshSubscribers.forEach((callback) => callback(status));
   refreshSubscribers = [];
 };
 
-const addRefreshSubscriber = (callback: (token: string) => void) => {
+const addRefreshSubscriber = (callback: (status: string) => void) => {
   refreshSubscribers.push(callback);
 };
 
@@ -52,17 +52,28 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
           if (refreshRes.ok) {
             isRefreshing = false;
-            onTokenRefreshed("refreshed");
+            onTokenRefreshed("success");
             return await executeRequest();
+          } else {
+            // Refresh failed (e.g. 401 or 403)
+            isRefreshing = false;
+            onTokenRefreshed("failed");
+            throw data;
           }
         } catch (refreshErr) {
           isRefreshing = false;
+          onTokenRefreshed("failed");
+          throw refreshErr;
         }
       }
 
-      return new Promise((resolve) => {
-        addRefreshSubscriber(() => {
-          resolve(executeRequest());
+      return new Promise((resolve, reject) => {
+        addRefreshSubscriber((status) => {
+          if (status === "success") {
+            resolve(executeRequest());
+          } else {
+            reject(new Error("Refresh failed"));
+          }
         });
       });
     }

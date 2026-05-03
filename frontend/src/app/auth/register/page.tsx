@@ -56,7 +56,7 @@ const RegisterPage = () => {
         ...formData,
         username: formData.email,
         first_name: formData.name,
-        role: "CUSTOMER",
+        role: "customer",
       });
       setUserEmail(formData.email);
       setRegistered(true);

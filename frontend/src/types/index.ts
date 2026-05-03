@@ -23,4 +23,29 @@ export interface Product {
   category_name: string;
   images: ProductImage[];
   variants: ProductVariant[];
+  ai_description?: string;
+  ai_style_tags?: string[];
+}
+
+export interface User {
+  id: number;
+  email: string;
+  first_name: string;
+  last_name?: string;
+  role: "customer" | "seller";
+}
+
+export interface LoginCredentials {
+  email: string;
+  password?: string;
+}
+
+export interface RegisterCredentials {
+  email: string;
+  username?: string;
+  password1?: string;
+  password2?: string;
+  first_name: string;
+  last_name?: string;
+  role: "customer" | "seller";
 }

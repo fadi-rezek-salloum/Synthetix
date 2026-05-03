@@ -55,7 +55,7 @@ const RegisterSellerPage = () => {
         ...formData,
         username: formData.email,
         first_name: formData.name,
-        role: "SELLER", // Hardcoded for this page
+        role: "seller", // Hardcoded for this page
       });
       setUserEmail(formData.email);
       setRegistered(true);

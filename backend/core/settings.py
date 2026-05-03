@@ -104,6 +104,9 @@ REST_AUTH = {
     "USE_JWT": True,
     "JWT_AUTH_COOKIE": "synthetix-auth",
     "JWT_AUTH_REFRESH_COOKIE": "synthetix-refresh",
+    "JWT_AUTH_HTTPONLY": True,
+    "JWT_AUTH_SAMESITE": "Lax",
+    "JWT_AUTH_SECURE": False,
     "REGISTER_SERIALIZER": "accounts.auth_serializers.CustomRegisterSerializer",
 }
 
