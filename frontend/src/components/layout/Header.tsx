@@ -2,12 +2,20 @@
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { ShoppingBag, Search } from "lucide-react";
+import { useCart } from "@/context/CartContext";
+import { ShoppingBag, Search as SearchIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import UserMenu from "./UserMenu";
+import { useState } from "react";
+import { SearchOverlay } from "./SearchOverlay";
 
 export const Header = () => {
   const { user, logout, loading } = useAuth();
+  const { cart } = useCart();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const cartCount = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
+
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6 pointer-events-none">
@@ -41,8 +49,11 @@ export const Header = () => {
         <div className="h-4 w-px bg-white/10 mx-2" />
 
         <div className="flex items-center gap-4">
-          <button className="p-2 text-zinc-500 hover:text-white transition-colors">
-            <Search className="w-4 h-4" />
+          <button 
+            onClick={() => setIsSearchOpen(true)}
+            className="p-2 text-zinc-500 hover:text-white transition-colors"
+          >
+            <SearchIcon className="w-4 h-4" />
           </button>
 
           <AnimatePresence mode="wait">
@@ -78,10 +89,23 @@ export const Header = () => {
             className="relative p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors text-white border border-white/5"
           >
             <ShoppingBag className="w-4 h-4" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 rounded-full border-2 border-zinc-950" />
+            {cartCount > 0 && (
+              <motion.span 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full border-2 border-zinc-950 text-[8px] font-black flex items-center justify-center"
+              >
+                {cartCount}
+              </motion.span>
+            )}
           </Link>
         </div>
       </motion.nav>
+
+      <SearchOverlay 
+        isOpen={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+      />
     </header>
   );
 };

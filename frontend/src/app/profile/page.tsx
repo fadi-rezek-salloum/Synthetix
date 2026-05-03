@@ -1,18 +1,51 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import { apiFetch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { User, Mail, Package, Heart, MapPin, CreditCard } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
+  const [stats, setStats] = useState({
+    orders: 0,
+    wishlist: 0,
+    addresses: 0,
+    payments: 0
+  });
+  const [fetchingStats, setFetchingStats] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
       router.push("/auth/login");
+      return;
+    }
+
+    if (user) {
+      // Fetch dynamic stats
+      const fetchStats = async () => {
+        try {
+          const [wishlistRes, ordersRes] = await Promise.all([
+            apiFetch('/catalog/wishlist/'),
+            apiFetch('/orders/orders/')
+          ]);
+          
+          setStats({
+            orders: ordersRes.count || 0,
+            wishlist: wishlistRes.results?.[0]?.products?.length || 0,
+            addresses: user.addresses?.length || 0,
+            payments: 0 // Placeholder for now
+          });
+        } catch (err) {
+          console.error("Failed to fetch profile stats:", err);
+        } finally {
+          setFetchingStats(false);
+        }
+      };
+      fetchStats();
     }
   }, [user, loading, router]);
 
@@ -106,10 +139,10 @@ export default function ProfilePage() {
               className="grid grid-cols-1 sm:grid-cols-2 gap-4"
             >
               {[
-                { icon: <Package />, label: "Orders", value: "0", desc: "No active orders" },
-                { icon: <Heart />, label: "Wishlist", value: "0", desc: "Items you've liked" },
-                { icon: <MapPin />, label: "Addresses", value: user.addresses?.length || "0", desc: "Saved shipping info" },
-                { icon: <CreditCard />, label: "Payments", value: "0", desc: "Saved payment methods" },
+                { icon: <Package />, label: "Orders", value: stats.orders, desc: "No active orders" },
+                { icon: <Heart />, label: "Wishlist", value: stats.wishlist, desc: "Items you've liked" },
+                { icon: <MapPin />, label: "Addresses", value: stats.addresses, desc: "Saved shipping info" },
+                { icon: <CreditCard />, label: "Payments", value: stats.payments, desc: "Saved payment methods" },
               ].map((stat, i) => (
                 <div key={i} className="glass p-6 rounded-3xl border-white/5 hover:bg-white/5 transition-colors cursor-pointer group">
                   <div className="text-indigo-400 mb-4 group-hover:scale-110 transition-transform origin-left">{stat.icon}</div>

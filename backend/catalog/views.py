@@ -1,7 +1,10 @@
+import django_filters
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 
 from .models import Category, Product, ProductImage, ProductVariant, Review, StockLog, Wishlist
 from .permissions import (
@@ -20,10 +23,8 @@ from .serializers import (
     WishlistSerializer,
 )
 
-from rest_framework.decorators import action
-from rest_framework.response import Response
-
 class WishlistViewSet(viewsets.ModelViewSet):
+
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = WishlistSerializer
 
@@ -54,7 +55,6 @@ class WishlistViewSet(viewsets.ModelViewSet):
         except Product.DoesNotExist:
             return Response({"error": "Product not found"}, status=404)
 
-import django_filters
 
 class ProductFilter(django_filters.FilterSet):
     min_price = django_filters.NumberFilter(field_name="base_price", lookup_expr='gte')

@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { WishlistProvider } from "@/context/WishlistContext";
+import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
@@ -17,8 +20,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Synthetix",
-  description: "Premium Fashion with AI-Driven Identity & Style",
+  title: "Synthetix | Premium Fashion & AI Style Identity",
+  description: "Experience the future of fashion. Synthetix combines high-end streetwear with AI-driven style discovery and identity-first security.",
+  keywords: ["fashion", "streetwear", "AI", "premium", "luxury", "Synthetix"],
+  openGraph: {
+    title: "Synthetix | Premium Fashion",
+    description: "AI-Driven Identity & Style Discovery",
+    type: "website",
+    url: "https://synthetix.com",
+    images: ["/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({
@@ -37,8 +48,15 @@ export default function RootLayout({
           clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
         >
           <AuthProvider>
-            <Header />
-            {children}
+            <WishlistProvider>
+              <CartProvider>
+                <Header />
+                <div className="flex-grow">
+                  {children}
+                </div>
+                <Footer />
+              </CartProvider>
+            </WishlistProvider>
           </AuthProvider>
         </GoogleOAuthProvider>
       </body>

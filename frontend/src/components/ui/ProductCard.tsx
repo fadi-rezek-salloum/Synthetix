@@ -2,9 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, User } from "lucide-react";
 import { Product } from "@/types";
 import { cn } from "@/lib/utils";
+import { useWishlist } from "@/context/WishlistContext";
+import { useAuth } from "@/context/AuthContext";
+import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +16,22 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, priority = false }: ProductCardProps) => {
+  const { wishlistIds, toggleWishlist } = useWishlist();
+  const { user } = useAuth();
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const isWishlisted = wishlistIds.includes(product.id);
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      // Redirect to login or show toast?
+      return;
+    }
+    toggleWishlist(product.id);
+  };
+
   const displayImage =
     product.images.find((img) => img.is_feature)?.image ||
     product.images[0]?.image;
@@ -50,6 +70,20 @@ const ProductCard = ({ product, priority = false }: ProductCardProps) => {
               Limited Drop
             </div>
           )}
+
+          <button
+            onClick={handleWishlistClick}
+            className={cn(
+              "absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 z-20",
+              isWishlisted 
+                ? "bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]" 
+                : "bg-black/20 backdrop-blur-md border border-white/10 text-white hover:bg-white hover:text-black"
+            )}
+          >
+            <Heart 
+              className={cn("w-5 h-5 transition-transform duration-300", isWishlisted && "fill-current scale-110")} 
+            />
+          </button>
         </div>
 
         <div className="space-y-1 px-2">

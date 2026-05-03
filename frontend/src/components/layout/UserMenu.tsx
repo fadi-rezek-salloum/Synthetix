@@ -11,6 +11,8 @@ import {
   LogOut,
   ChevronDown,
   LayoutDashboard,
+  Heart,
+  Package,
 } from "lucide-react";
 
 const UserMenu = () => {
@@ -94,6 +96,18 @@ const UserMenu = () => {
                 href="/profile"
                 icon={<User className="w-4 h-4" />}
                 label="Profile"
+                onClick={() => setIsOpen(false)}
+              />
+              <MenuLink
+                href="/wishlist"
+                icon={<Heart className="w-4 h-4" />}
+                label="Wishlist"
+                onClick={() => setIsOpen(false)}
+              />
+              <MenuLink
+                href="/orders"
+                icon={<Package className="w-4 h-4" />}
+                label="My Orders"
                 onClick={() => setIsOpen(false)}
               />
               <MenuLink

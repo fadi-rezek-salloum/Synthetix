@@ -1,13 +1,26 @@
+from allauth.socialaccount.models import SocialAccount, SocialApp
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
-from rest_framework import generics, permissions, viewsets
+from dj_rest_auth.jwt_auth import set_jwt_cookies
+from dj_rest_auth.utils import jwt_encode
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.response import Response
+import re
+import requests
 
 from .models import Address, CustomerProfile, SellerProfile
 from .permissions import IsCustomer, IsSeller
 from .serializers import AddressSerializer, CustomerProfileSerializer, SellerProfileSerializer, UserSerializer
 
+User = get_user_model()
 
 class CustomerProfileView(generics.RetrieveUpdateAPIView):
+
     serializer_class = CustomerProfileSerializer
     permission_classes = [IsCustomer]
 
@@ -34,20 +47,9 @@ class AddressViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-from django.contrib.auth import get_user_model
-from rest_framework.response import Response
-from rest_framework import status
-import requests
-from allauth.socialaccount.models import SocialAccount, SocialApp
-
-User = get_user_model()
-
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
 
-    def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
-        return response
 
 # I'll create a better flow: A "Social Register" flow.
 class GoogleSocialCheckView(generics.GenericAPIView):
@@ -99,7 +101,6 @@ class GoogleSocialRegisterView(generics.GenericAPIView):
             return Response({"error": "Token, password and phone number are required"}, status=400)
             
         # 1. Validate Phone Number (Basic check for 10+ digits)
-        import re
         clean_phone = re.sub(r'\D', '', phone_number)
         if len(clean_phone) < 10:
             return Response({"error": "Please enter a valid phone number with at least 10 digits."}, status=400)
@@ -122,8 +123,6 @@ class GoogleSocialRegisterView(generics.GenericAPIView):
                 return Response({"error": "User already exists"}, status=400)
             
             # 3. Validate Password Strength
-            from django.contrib.auth.password_validation import validate_password
-            from django.core.exceptions import ValidationError
             try:
                 validate_password(password)
             except ValidationError as e:
@@ -158,23 +157,26 @@ class GoogleSocialRegisterView(generics.GenericAPIView):
                     profile, _ = CustomerProfile.objects.get_or_create(user=user)
                     avatar_res = requests.get(avatar_url, timeout=10)
                     if avatar_res.status_code == 200:
-                        from django.core.files.base import ContentFile
                         profile.avatar.save(f"avatar_{user.id}.jpg", ContentFile(avatar_res.content), save=True)
                 except Exception as avatar_err:
                     print(f"Non-critical error saving avatar: {avatar_err}")
             
             # 7. Generate tokens
-            from dj_rest_auth.utils import jwt_encode
             access, refresh = jwt_encode(user)
             
             # Refresh from DB to get the profile and avatar we just created/saved
             user.refresh_from_db()
             
-            return Response({
+            response = Response({
                 "user": UserSerializer(user).data,
                 "access": str(access),
                 "refresh": str(refresh),
             })
+            
+            # Set HTTP-only cookies for the response
+            set_jwt_cookies(response, access, refresh)
+            
+            return response
         except SocialApp.DoesNotExist:
             return Response({"error": "Google SocialApp not configured"}, status=500)
         except Exception as e:
