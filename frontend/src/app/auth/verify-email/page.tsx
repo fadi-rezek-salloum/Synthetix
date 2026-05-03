@@ -26,7 +26,7 @@ function VerifyEmailContent() {
         });
         setStatus("success");
         setTimeout(() => router.push("/auth/login?verified=true"), 3000);
-      } catch (error: any) {
+      } catch {
         setStatus("error");
       }
     };

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { Cart, CartItem } from "@/types";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { Cart } from "@/types";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "./AuthContext";
 
@@ -19,29 +19,35 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await apiFetch("/orders/cart/");
-      setCart(data.results?.[0] || data || null);
+      const data = await apiFetch<Cart | { results?: Cart[] }>("/orders/cart/");
+      const paginatedCart = data as { results?: Cart[] };
+      setCart(Array.isArray(paginatedCart.results) ? paginatedCart.results[0] || null : data as Cart);
     } catch (err) {
       console.error("Failed to fetch cart:", err);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    if (user) {
+    const loadCart = async () => {
       setLoading(true);
-      fetchCart().finally(() => setLoading(false));
+      await fetchCart();
+      setLoading(false);
+    };
+
+    if (user) {
+      void loadCart();
     } else {
-      setCart(null);
+      window.setTimeout(() => setCart(null), 0);
     }
-  }, [user]);
+  }, [fetchCart, user]);
 
   const addToCart = async (variantId: number, quantity: number = 1) => {
     if (!user) return;
     try {
-      const updatedCart = await apiFetch("/orders/cart/add_item/", {
+      const updatedCart = await apiFetch<Cart>("/orders/cart/add_item/", {
         method: "POST",
         body: JSON.stringify({ variant_id: variantId, quantity }),
       });
@@ -58,7 +64,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       // For now, let's just refetch or implement a specific cart-remove action
       await apiFetch(`/orders/cart/remove_item/`, {
         method: "POST",
-        body: JSON.stringify({ item_id: itemId })
+        body: JSON.stringify({ item_id: itemId }),
       });
       await fetchCart();
     } catch (err) {

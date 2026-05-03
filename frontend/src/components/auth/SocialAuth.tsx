@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Smartphone, Lock, ArrowRight, User as UserIcon, X } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
+import { toApiError } from "@/lib/api";
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -65,7 +66,7 @@ export const SocialAuth = () => {
           });
           setShowCompletionForm(true);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Social Auth Error:", err);
         setError("Failed to authenticate with Google. Please try again.");
       } finally {
@@ -110,9 +111,13 @@ export const SocialAuth = () => {
         password: completionData.password
       });
       login(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Handle the array of errors from Django
-      const errorMsg = Array.isArray(err.error) ? err.error[0] : (err.error || "Failed to complete your profile.");
+      const apiError = toApiError(err);
+      const errorValue = apiError.error;
+      const errorMsg = Array.isArray(errorValue)
+        ? errorValue[0]
+        : errorValue || "Failed to complete your profile.";
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -192,7 +197,7 @@ export const SocialAuth = () => {
                   type="tel"
                   placeholder="Phone Number"
                   value={completionData.phone_number}
-                  onChange={(e: any) => setCompletionData({...completionData, phone_number: e.target.value})}
+                  onChange={(e) => setCompletionData({...completionData, phone_number: e.target.value})}
                   required
                 />
                 <InputField
@@ -200,7 +205,7 @@ export const SocialAuth = () => {
                   type="password"
                   placeholder="Create a Password"
                   value={completionData.password}
-                  onChange={(e: any) => setCompletionData({...completionData, password: e.target.value})}
+                  onChange={(e) => setCompletionData({...completionData, password: e.target.value})}
                   required
                 />
 

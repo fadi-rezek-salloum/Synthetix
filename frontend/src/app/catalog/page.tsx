@@ -9,7 +9,6 @@ import {
   Search, 
   SlidersHorizontal,
   X,
-  ChevronDown,
   Check
 } from "lucide-react";
 import { productService } from "@/services/productService";

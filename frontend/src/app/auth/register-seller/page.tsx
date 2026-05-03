@@ -9,10 +9,6 @@ import {
   Mail,
   Lock,
   User,
-  ArrowRight,
-  Eye,
-  EyeOff,
-  AlertCircle,
   MailCheck,
   Store,
   Smartphone,
@@ -21,6 +17,7 @@ import {
 } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
 import { SocialAuth } from "@/components/auth/SocialAuth";
+import { toApiError } from "@/lib/api";
 
 const RegisterSellerPage = () => {
   const [formData, setFormData] = useState({
@@ -34,8 +31,6 @@ const RegisterSellerPage = () => {
     logo: null as File | null,
   });
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showPassword2, setShowPassword2] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [registered, setRegistered] = useState(false);
@@ -66,9 +61,9 @@ const RegisterSellerPage = () => {
       });
       setUserEmail(formData.email);
       setRegistered(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err && typeof err === "object") {
-        setErrors(err);
+        setErrors(toApiError(err) as Record<string, string[]>);
       } else {
         setErrors({ non_field_errors: ["An unexpected error occurred."] });
       }
@@ -208,7 +203,7 @@ const RegisterSellerPage = () => {
 
           <InputField
             icon={<Lock className="w-4 h-4" />}
-            type={showPassword ? "text" : "password"}
+            type="password"
             placeholder="Secure Password"
             value={formData.password1}
             onChange={(e) =>
@@ -219,7 +214,7 @@ const RegisterSellerPage = () => {
           />
           <InputField
             icon={<Lock className="w-4 h-4" />}
-            type={showPassword2 ? "text" : "password"}
+            type="password"
             placeholder="Confirm Password"
             value={formData.password2}
             onChange={(e) =>

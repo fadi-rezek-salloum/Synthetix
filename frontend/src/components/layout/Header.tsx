@@ -10,7 +10,7 @@ import { useState } from "react";
 import { SearchOverlay } from "./SearchOverlay";
 
 export const Header = () => {
-  const { user, logout, loading } = useAuth();
+  const { user, loading } = useAuth();
   const { cart } = useCart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 

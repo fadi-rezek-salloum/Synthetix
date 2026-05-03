@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import { Order } from "@/types";
+import { Order, PaginatedResponse } from "@/types";
 import { apiFetch } from "@/lib/api";
-import { Package, ChevronRight, Clock, CheckCircle2, Truck, XCircle, ArrowRight } from "lucide-react";
+import { Package, Clock, CheckCircle2, Truck, XCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (user) {
-      apiFetch("/orders/orders/")
+      apiFetch<PaginatedResponse<Order>>("/orders/orders/")
         .then((data) => {
           setOrders(data.results || []);
         })

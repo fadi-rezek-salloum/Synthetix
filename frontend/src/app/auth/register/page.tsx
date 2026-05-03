@@ -21,9 +21,9 @@ import {
 } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
 import { SocialAuth } from "@/components/auth/SocialAuth";
+import { toApiError } from "@/lib/api";
 
 const RegisterPage = () => {
-  const { login } = useAuth();
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -59,16 +59,16 @@ const RegisterPage = () => {
     setErrors({});
 
     try {
-      const data = await authService.register({
+      await authService.register({
         ...formData,
         username: formData.email,
         role: "customer",
       });
       setUserEmail(formData.email);
       setRegistered(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err && typeof err === "object") {
-        setErrors(err);
+        setErrors(toApiError(err) as Record<string, string[]>);
       } else {
         setErrors({ non_field_errors: ["An unexpected error occurred."] });
       }
@@ -170,7 +170,7 @@ const RegisterPage = () => {
               type="text"
               placeholder="First Name"
               value={formData.first_name}
-              onChange={(e: any) =>
+              onChange={(e) =>
                 setFormData({ ...formData, first_name: e.target.value })
               }
               errors={errors.first_name}
@@ -181,7 +181,7 @@ const RegisterPage = () => {
               type="text"
               placeholder="Last Name"
               value={formData.last_name}
-              onChange={(e: any) =>
+              onChange={(e) =>
                 setFormData({ ...formData, last_name: e.target.value })
               }
               errors={errors.last_name}
@@ -194,7 +194,7 @@ const RegisterPage = () => {
             type="email"
             placeholder="Email Address"
             value={formData.email}
-            onChange={(e: any) =>
+            onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
             errors={errors.email}
@@ -206,7 +206,7 @@ const RegisterPage = () => {
             type="tel"
             placeholder="Phone Number (Optional)"
             value={formData.phone_number}
-            onChange={(e: any) =>
+            onChange={(e) =>
               setFormData({ ...formData, phone_number: e.target.value })
             }
             errors={errors.phone_number}
@@ -218,7 +218,7 @@ const RegisterPage = () => {
               type={showPassword ? "text" : "password"}
               placeholder="Create Password"
               errors={errors.password1}
-              onChange={(e: any) => setFormData({ ...formData, password1: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, password1: e.target.value })}
               required
             />
             <button
@@ -240,7 +240,7 @@ const RegisterPage = () => {
               type={showPassword2 ? "text" : "password"}
               placeholder="Confirm Password"
               errors={errors.password2}
-              onChange={(e: any) => setFormData({ ...formData, password2: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, password2: e.target.value })}
               required
             />
             <button

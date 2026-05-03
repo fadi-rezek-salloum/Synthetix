@@ -3,8 +3,12 @@ from .models import Cart, CartItem, Order, OrderItem
 from catalog.serializers import ProductVariantSerializer, ProductSerializer
 
 
+class CartProductVariantSerializer(ProductVariantSerializer):
+    product = ProductSerializer(read_only=True)
+
+
 class CartItemSerializer(serializers.ModelSerializer):
-    variant = ProductVariantSerializer(read_only=True)
+    variant = CartProductVariantSerializer(read_only=True)
     variant_id = serializers.IntegerField(write_only=True)
     subtotal = serializers.ReadOnlyField()
 

@@ -22,6 +22,7 @@ export interface ProductImage {
 
 export interface ProductVariant {
   id: number;
+  product?: Product;
   size: string;
   color: string;
   stock: number;
@@ -72,7 +73,7 @@ export interface Wishlist {
 
 export interface CartItem {
   id: number;
-  variant: ProductVariant;
+  variant: ProductVariant & { product: Product };
   quantity: number;
   subtotal: string;
 }

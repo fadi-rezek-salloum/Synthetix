@@ -19,16 +19,18 @@ export const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
 
   useEffect(() => {
     if (query.length > 2) {
-      setLoading(true);
       const timer = setTimeout(() => {
-        apiFetch(`/catalog/products/?search=${query}`)
+        setLoading(true);
+        apiFetch<{ results?: Product[] }>(
+          `/catalog/products/?search=${encodeURIComponent(query)}`,
+        )
           .then((data) => setResults(data.results || []))
           .catch(console.error)
           .finally(() => setLoading(false));
       }, 300);
       return () => clearTimeout(timer);
     } else {
-      setResults([]);
+      window.setTimeout(() => setResults([]), 0);
     }
   }, [query]);
 
@@ -37,7 +39,7 @@ export const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "unset";
-      setQuery("");
+      window.setTimeout(() => setQuery(""), 0);
     }
   }, [isOpen]);
 

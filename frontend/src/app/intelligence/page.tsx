@@ -47,7 +47,7 @@ export default function IntelligencePage() {
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-zinc-400 font-light leading-relaxed max-w-2xl mx-auto">
-            Our proprietary AI doesn't just recommend clothes. It analyzes your digital footprint to decode your purest aesthetic truth.
+            Our proprietary AI does not just recommend clothes. It analyzes your digital footprint to decode your purest aesthetic truth.
           </p>
         </motion.div>
 

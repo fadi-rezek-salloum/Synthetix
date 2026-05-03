@@ -32,7 +32,7 @@ export default function NotFound() {
             Artifact Lost in Transmission
           </h2>
           <p className="text-zinc-500 font-medium mb-12 max-w-sm mx-auto">
-            The coordinates you're tracking don't exist in our current database. Return to the core or try another query.
+            The coordinates you are tracking do not exist in our current database. Return to the core or try another query.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

@@ -2,13 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { Heart, User } from "lucide-react";
+import { motion } from "framer-motion";
+import { Heart } from "lucide-react";
 import { Product } from "@/types";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
 
 interface ProductCardProps {
   product: Product;
@@ -18,7 +17,6 @@ interface ProductCardProps {
 const ProductCard = ({ product, priority = false }: ProductCardProps) => {
   const { wishlistIds, toggleWishlist } = useWishlist();
   const { user } = useAuth();
-  const [isHovered, setIsHovered] = useState(false);
   
   const isWishlisted = wishlistIds.includes(product.id);
 

@@ -1,18 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Lock, MapPin, CreditCard, ChevronRight, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Lock, CreditCard, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export default function CheckoutPage() {
   const { cart, loading } = useCart();
-  const { user } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [shippingAddress, setShippingAddress] = useState("");
@@ -183,4 +181,3 @@ export default function CheckoutPage() {
     </main>
   );
 }
-

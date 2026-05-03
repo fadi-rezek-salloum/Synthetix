@@ -23,12 +23,14 @@ export const productService = {
     if (params.max_price) queryParams.set("max_price", params.max_price.toString());
     if (params.ordering) queryParams.set("ordering", params.ordering);
 
-    const response = await apiFetch(`/catalog/products/?${queryParams.toString()}`);
+    const response = await apiFetch<PaginatedResponse<Product>>(
+      `/catalog/products/?${queryParams.toString()}`,
+    );
     return response;
   },
 
   getProductBySlug: async (slug: string): Promise<Product> => {
-    const response = await apiFetch(`/catalog/products/${slug}/`);
+    const response = await apiFetch<Product>(`/catalog/products/${slug}/`);
     return response;
   },
 };

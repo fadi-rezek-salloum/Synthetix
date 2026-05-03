@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Product } from "@/types";
 import { productService } from "@/services/productService";
-import { Sparkles, ShieldCheck, Zap } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import ProductGallery from "@/components/ui/ProductGallery";
 
 const ProductPage = () => {

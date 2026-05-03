@@ -1,9 +1,27 @@
 import { apiFetch } from "@/lib/api";
 import { LoginCredentials, RegisterCredentials, User } from "@/types";
 
+interface LoginResponse {
+  user: User;
+}
+
+interface PasswordResetConfirmData {
+  uid: string;
+  token: string;
+  new_password1: string;
+  new_password2: string;
+}
+
+interface SocialCheckResponse {
+  exists: boolean;
+  email: string;
+  first_name: string;
+  last_name: string;
+}
+
 export const authService = {
   login: async (credentials: LoginCredentials) => {
-    return await apiFetch("/accounts/auth/login/", {
+    return await apiFetch<LoginResponse>("/accounts/auth/login/", {
       method: "POST",
       body: JSON.stringify(credentials),
     });
@@ -19,13 +37,13 @@ export const authService = {
           formData.append(key, value as string | Blob);
         }
       });
-      return await apiFetch("/accounts/auth/registration/", {
+      return await apiFetch<LoginResponse>("/accounts/auth/registration/", {
         method: "POST",
         body: formData,
       });
     }
 
-    return await apiFetch("/accounts/auth/registration/", {
+    return await apiFetch<LoginResponse>("/accounts/auth/registration/", {
       method: "POST",
       body: JSON.stringify(credentials),
     });
@@ -48,26 +66,26 @@ export const authService = {
     });
   },
 
-  passwordResetConfirm: async (data: any) => {
+  passwordResetConfirm: async (data: PasswordResetConfirmData) => {
     return await apiFetch("/accounts/auth/password/reset/confirm/", {
       method: "POST",
       body: JSON.stringify(data),
     });
   },
   socialLogin: async (provider: "google", accessToken: string) => {
-    return await apiFetch(`/accounts/auth/${provider}/`, {
+    return await apiFetch<LoginResponse>(`/accounts/auth/${provider}/`, {
       method: "POST",
       body: JSON.stringify({ access_token: accessToken }),
     });
   },
   socialCheck: async (provider: "google", accessToken: string) => {
-    return await apiFetch(`/accounts/auth/${provider}/check/`, {
+    return await apiFetch<SocialCheckResponse>(`/accounts/auth/${provider}/check/`, {
       method: "POST",
       body: JSON.stringify({ access_token: accessToken }),
     });
   },
   socialRegisterFinish: async (provider: "google", data: {access_token: string, phone_number: string, password: string}) => {
-    return await apiFetch(`/accounts/auth/${provider}/register/`, {
+    return await apiFetch<LoginResponse>(`/accounts/auth/${provider}/register/`, {
       method: "POST",
       body: JSON.stringify(data),
     });

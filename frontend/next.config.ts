@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {},
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -11,15 +12,6 @@ const nextConfig: NextConfig = {
         pathname: "/media/**",
       },
     ],
-  },
-  webpack: (config, { dev, isServer }) => {
-    if (dev && !isServer) {
-      config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-      };
-    }
-    return config;
   },
 };
 

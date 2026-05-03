@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Terminal, Send, Camera, ArrowUpRight } from "lucide-react";
 
 export const Footer = () => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { Product } from "@/types";
@@ -18,7 +18,7 @@ export default function WishlistPage() {
 
   useEffect(() => {
     if (user) {
-      apiFetch("/catalog/wishlist/")
+      apiFetch<{ results?: { products?: Product[] }[] }>("/catalog/wishlist/")
         .then((data) => {
           setProducts(data.results?.[0]?.products || []);
         })
@@ -45,7 +45,7 @@ export default function WishlistPage() {
             <Heart className="w-10 h-10 text-zinc-700" />
           </div>
           <h1 className="text-4xl font-black text-white uppercase italic mb-4">Empty Collection</h1>
-          <p className="text-zinc-500 mb-12">You haven't saved any artifacts to your personal archive yet.</p>
+          <p className="text-zinc-500 mb-12">You have not saved any artifacts to your personal archive yet.</p>
           <Link 
             href="/catalog"
             className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black uppercase tracking-widest rounded-full hover:bg-luxury-gold transition-colors"

@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { User, Mail, Package, Heart, MapPin, CreditCard } from "lucide-react";
+import { Order, Product } from "@/types";
 
 export default function ProfilePage() {
   const { user, loading } = useAuth();
@@ -15,7 +16,6 @@ export default function ProfilePage() {
     addresses: 0,
     payments: 0
   });
-  const [fetchingStats, setFetchingStats] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,8 +29,8 @@ export default function ProfilePage() {
       const fetchStats = async () => {
         try {
           const [wishlistRes, ordersRes] = await Promise.all([
-            apiFetch('/catalog/wishlist/'),
-            apiFetch('/orders/orders/')
+            apiFetch<{ results?: { products?: Product[] }[] }>("/catalog/wishlist/"),
+            apiFetch<{ count?: number; results?: Order[] }>("/orders/orders/"),
           ]);
           
           setStats({
@@ -41,8 +41,6 @@ export default function ProfilePage() {
           });
         } catch (err) {
           console.error("Failed to fetch profile stats:", err);
-        } finally {
-          setFetchingStats(false);
         }
       };
       fetchStats();
@@ -140,7 +138,7 @@ export default function ProfilePage() {
             >
               {[
                 { icon: <Package />, label: "Orders", value: stats.orders, desc: "No active orders" },
-                { icon: <Heart />, label: "Wishlist", value: stats.wishlist, desc: "Items you've liked" },
+                { icon: <Heart />, label: "Wishlist", value: stats.wishlist, desc: "Items you have liked" },
                 { icon: <MapPin />, label: "Addresses", value: stats.addresses, desc: "Saved shipping info" },
                 { icon: <CreditCard />, label: "Payments", value: stats.payments, desc: "Saved payment methods" },
               ].map((stat, i) => (
@@ -162,7 +160,7 @@ export default function ProfilePage() {
               <h3 className="text-xl font-bold text-white mb-6">Recent Orders</h3>
               <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-white/5 rounded-2xl">
                 <Package className="w-12 h-12 text-zinc-800 mb-4" />
-                <p className="text-zinc-500 font-medium">You haven't placed any orders yet.</p>
+                <p className="text-zinc-500 font-medium">You have not placed any orders yet.</p>
                 <button 
                   onClick={() => router.push('/')}
                   className="mt-6 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-300 transition-colors underline underline-offset-8"

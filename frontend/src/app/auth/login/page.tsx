@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Mail, Lock, ArrowRight, EyeOff, Eye, AlertCircle } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
 import { SocialAuth } from "@/components/auth/SocialAuth";
+import { toApiError } from "@/lib/api";
 
 const LoginPage = () => {
   const { login, user, loading: authLoading } = useAuth();
@@ -33,9 +34,9 @@ const LoginPage = () => {
     try {
       const data = await authService.login({ email, password });
       login(data);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err && typeof err === "object") {
-        setErrors(err);
+        setErrors(toApiError(err) as Record<string, string[]>);
       } else {
         setErrors({
           non_field_errors: ["An unexpected connection error occurred."],

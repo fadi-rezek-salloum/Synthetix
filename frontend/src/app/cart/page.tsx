@@ -3,14 +3,12 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
-import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function CartPage() {
   const { cart, addToCart, removeFromCart, loading } = useCart();
-  const { user } = useAuth();
   const router = useRouter();
 
   if (loading) {
@@ -29,7 +27,7 @@ export default function CartPage() {
             <ShoppingBag className="w-10 h-10 text-zinc-700" />
           </div>
           <h1 className="text-4xl font-black text-white uppercase italic mb-4">Your Bag is Empty</h1>
-          <p className="text-zinc-500 mb-12">Looks like you haven't added any items to your curated collection yet.</p>
+          <p className="text-zinc-500 mb-12">Looks like you have not added any items to your curated collection yet.</p>
           <Link 
             href="/catalog"
             className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black font-black uppercase tracking-widest rounded-full hover:bg-luxury-gold transition-colors"

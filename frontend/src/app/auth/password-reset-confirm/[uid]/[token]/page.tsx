@@ -5,9 +5,12 @@ import { motion } from "framer-motion";
 import { Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { authService } from "@/services/authService";
 import { InputField } from "@/components/ui/Input";
+import { toApiError } from "@/lib/api";
 
 export default function PasswordResetConfirmPage() {
   const { uid, token } = useParams();
+  const uidParam = Array.isArray(uid) ? uid[0] : uid;
+  const tokenParam = Array.isArray(token) ? token[0] : token;
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -19,17 +22,24 @@ export default function PasswordResetConfirmPage() {
     e.preventDefault();
     setLoading(true);
     setErrors({});
+
+    if (!uidParam || !tokenParam) {
+      setErrors({ non_field_errors: ["Password reset link is invalid."] });
+      setLoading(false);
+      return;
+    }
+
     try {
       await authService.passwordResetConfirm({
-        uid,
-        token,
+        uid: uidParam,
+        token: tokenParam,
         new_password1: password,
         new_password2: password,
       });
       setSuccess(true);
       setTimeout(() => router.push("/auth/login"), 3000);
-    } catch (err: any) {
-      setErrors(err);
+    } catch (err: unknown) {
+      setErrors(toApiError(err) as Record<string, string[]>);
     } finally {
       setLoading(false);
     }

@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: any) => void;
+  login: (data: { user: User }) => void;
   logout: () => void;
 }
 
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
 
-  const login = (userData: any) => {
+  const login = (userData: { user: User }) => {
     localStorage.setItem("synthetix_auth_sync", Date.now().toString());
     setUser(userData.user);
     router.push("/");

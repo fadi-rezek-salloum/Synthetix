@@ -1,10 +1,12 @@
 import { apiFetch } from "@/lib/api";
-import { Category } from "@/types";
+import { Category, PaginatedResponse } from "@/types";
 
 export const categoryService = {
   getCategories: async (): Promise<Category[]> => {
-    const response = await apiFetch("/catalog/categories/");
+    const response = await apiFetch<Category[] | PaginatedResponse<Category>>(
+      "/catalog/categories/",
+    );
     // DRF router usually returns results if paginated, but list views for categories might be simple arrays
-    return response.results || response;
+    return Array.isArray(response) ? response : response.results;
   },
 };

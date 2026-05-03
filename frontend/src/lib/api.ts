@@ -14,8 +14,24 @@ const addRefreshSubscriber = (callback: (status: string) => void) => {
   refreshSubscribers.push(callback);
 };
 
-export async function apiFetch(endpoint: string, options: RequestInit = {}) {
-  const executeRequest = async (): Promise<any> => {
+export type ApiError = Record<string, string | string[]> & {
+  detail?: string | string[];
+  non_field_errors?: string | string[];
+};
+
+export const toApiError = (error: unknown): ApiError => {
+  if (error && typeof error === "object") {
+    return error as ApiError;
+  }
+
+  return { detail: "An unexpected error occurred." };
+};
+
+export async function apiFetch<T = unknown>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const executeRequest = async (): Promise<T> => {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       credentials: "include",
@@ -28,10 +44,10 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     });
 
     const text = await response.text();
-    let data;
+    let data: unknown;
     try {
       data = text ? JSON.parse(text) : {};
-    } catch (e) {
+    } catch {
       data = { detail: "Server response was not valid JSON." };
     }
 
@@ -85,7 +101,7 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
       throw data;
     }
 
-    return data;
+    return data as T;
   };
 
   return executeRequest();

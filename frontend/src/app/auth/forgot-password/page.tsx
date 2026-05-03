@@ -5,6 +5,7 @@ import { Mail, ArrowRight, MailCheck } from "lucide-react";
 import Link from "next/link";
 import { authService } from "@/services/authService";
 import { InputField } from "@/components/ui/Input";
+import { toApiError } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -19,8 +20,8 @@ export default function ForgotPasswordPage() {
     try {
       await authService.forgotPassword(email);
       setSent(true);
-    } catch (err: any) {
-      setErrors(err);
+    } catch (err: unknown) {
+      setErrors(toApiError(err) as Record<string, string[]>);
     } finally {
       setLoading(false);
     }

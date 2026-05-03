@@ -19,17 +19,25 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    const loadWishlist = async () => {
       setLoading(true);
-      apiFetch("/catalog/wishlist/")
-        .then((data) => {
-          const products = data.results?.[0]?.products || [];
-          setWishlistIds(products.map((p: Product) => p.id));
-        })
-        .catch(console.error)
-        .finally(() => setLoading(false));
+      try {
+        const data = await apiFetch<{ results?: { products?: Product[] }[] }>(
+          "/catalog/wishlist/",
+        );
+        const products = data.results?.[0]?.products || [];
+        setWishlistIds(products.map((p) => p.id));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      void loadWishlist();
     } else {
-      setWishlistIds([]);
+      window.setTimeout(() => setWishlistIds([]), 0);
     }
   }, [user]);
 
@@ -37,10 +45,13 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
     if (!user) return;
     
     try {
-      const res = await apiFetch("/catalog/wishlist/toggle/", {
+      const res = await apiFetch<{ status: "added" | "removed" }>(
+        "/catalog/wishlist/toggle/",
+        {
         method: "POST",
         body: JSON.stringify({ product_id: productId }),
-      });
+        },
+      );
       
       if (res.status === "added") {
         setWishlistIds((prev) => [...prev, productId]);
