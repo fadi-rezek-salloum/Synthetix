@@ -48,6 +48,9 @@ export interface User {
   first_name: string;
   last_name?: string;
   role: "customer" | "seller";
+  phone_number?: string;
+  avatar?: string;
+  logo?: string;
 }
 
 export interface LoginCredentials {
@@ -61,6 +64,12 @@ export interface RegisterCredentials {
   password1?: string;
   password2?: string;
   first_name: string;
-  last_name?: string;
+  last_name: string;
+  phone_number?: string;
+  // Profile Media
+  avatar?: File | null;
+  logo?: File | null;
+  // Seller Profile Fields
+  store_name?: string;
   role: "customer" | "seller";
 }

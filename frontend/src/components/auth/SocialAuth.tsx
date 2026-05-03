@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { authService } from "@/services/authService";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { Smartphone, Lock, ArrowRight, User as UserIcon, X } from "lucide-react";
+import { InputField } from "@/components/ui/Input";
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -28,17 +31,40 @@ export const SocialAuth = () => {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Multi-step social registration state
+  const [showCompletionForm, setShowCompletionForm] = useState(false);
+  const [tempGoogleToken, setTempGoogleToken] = useState<string | null>(null);
+  const [googleUserData, setGoogleUserData] = useState<{email: string, first_name: string, last_name: string} | null>(null);
+  const [completionData, setCompletionData] = useState({
+    phone_number: "",
+    password: "",
+  });
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setLoading(true);
       setError(null);
       try {
-        const data = await authService.socialLogin(
-          "google",
-          tokenResponse.access_token
-        );
-        login(data); // Assuming socialLogin returns { user: ... } exactly like normal login
+        const token = tokenResponse.access_token;
+        
+        // 1. Check if user exists
+        const checkRes = await authService.socialCheck("google", token);
+        
+        if (checkRes.exists) {
+          // 2a. User exists, just log in
+          const data = await authService.socialLogin("google", token);
+          login(data);
+        } else {
+          // 2b. New user, show the completion form
+          setTempGoogleToken(token);
+          setGoogleUserData({
+            email: checkRes.email,
+            first_name: checkRes.first_name,
+            last_name: checkRes.last_name
+          });
+          setShowCompletionForm(true);
+        }
       } catch (err: any) {
         console.error("Social Auth Error:", err);
         setError("Failed to authenticate with Google. Please try again.");
@@ -52,6 +78,47 @@ export const SocialAuth = () => {
     },
   });
 
+  const handleCompletionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tempGoogleToken) return;
+
+    // Frontend Validation
+    const cleanPhone = completionData.phone_number.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+      setError("Please enter a valid phone number (at least 10 digits).");
+      return;
+    }
+
+    if (completionData.password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
+    const hasNumber = /\d/.test(completionData.password);
+    const hasLetter = /[a-zA-Z]/.test(completionData.password);
+    if (!hasNumber || !hasLetter) {
+      setError("Password must contain both letters and numbers.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await authService.socialRegisterFinish("google", {
+        access_token: tempGoogleToken,
+        phone_number: completionData.phone_number,
+        password: completionData.password
+      });
+      login(data);
+    } catch (err: any) {
+      // Handle the array of errors from Django
+      const errorMsg = Array.isArray(err.error) ? err.error[0] : (err.error || "Failed to complete your profile.");
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-3 w-full">
       <div className="flex items-center gap-4 my-6">
@@ -62,7 +129,7 @@ export const SocialAuth = () => {
         <div className="h-px bg-white/10 flex-1" />
       </div>
 
-      {error && (
+      {error && !showCompletionForm && (
         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs text-center mb-4">
           {error}
         </div>
@@ -81,6 +148,75 @@ export const SocialAuth = () => {
           </span>
         </button>
       </div>
+
+      <AnimatePresence>
+        {showCompletionForm && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="glass p-10 rounded-[2.5rem] max-w-md w-full border-white/10 relative"
+            >
+              <button 
+                onClick={() => setShowCompletionForm(false)}
+                className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
+                  <UserIcon className="w-8 h-8 text-indigo-400" />
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight mb-2">Finish Setting Up Your Account</h2>
+                <p className="text-sm text-zinc-500">
+                  Welcome, <span className="text-white font-bold">{googleUserData?.first_name}</span>! 
+                  Just a few more details to get you started.
+                </p>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs text-center mb-6">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleCompletionSubmit} className="space-y-4">
+                <InputField
+                  icon={<Smartphone className="w-4 h-4" />}
+                  type="tel"
+                  placeholder="Phone Number"
+                  value={completionData.phone_number}
+                  onChange={(e: any) => setCompletionData({...completionData, phone_number: e.target.value})}
+                  required
+                />
+                <InputField
+                  icon={<Lock className="w-4 h-4" />}
+                  type="password"
+                  placeholder="Create a Password"
+                  value={completionData.password}
+                  onChange={(e: any) => setCompletionData({...completionData, password: e.target.value})}
+                  required
+                />
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-white text-black font-bold py-4 rounded-2xl flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-[0.98] mt-6 disabled:opacity-50"
+                >
+                  {loading ? "Creating Account..." : "Complete Signup"}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

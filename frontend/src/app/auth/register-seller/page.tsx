@@ -15,17 +15,25 @@ import {
   AlertCircle,
   MailCheck,
   Store,
+  Smartphone,
+  Camera,
+  Upload,
 } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
 import { SocialAuth } from "@/components/auth/SocialAuth";
 
 const RegisterSellerPage = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     password1: "",
     password2: "",
+    phone_number: "",
+    store_name: "",
+    logo: null as File | null,
   });
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,7 +62,6 @@ const RegisterSellerPage = () => {
       await authService.register({
         ...formData,
         username: formData.email,
-        first_name: formData.name,
         role: "seller", // Hardcoded for this page
       });
       setUserEmail(formData.email);
@@ -106,27 +113,79 @@ const RegisterSellerPage = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md glass p-10 rounded-[2.5rem] border-white/5 relative z-10"
       >
-        <div className="mb-10 text-center">
+        <div className="mb-10 text-center flex flex-col items-center">
+          <div className="relative group mb-6">
+            <input
+              type="file"
+              id="logo-upload"
+              className="hidden"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setFormData({ ...formData, logo: file });
+                  setLogoPreview(URL.createObjectURL(file));
+                }
+              }}
+            />
+            <label
+              htmlFor="logo-upload"
+              className="w-24 h-24 rounded-full bg-luxury-gold/5 border-2 border-dashed border-luxury-gold/20 flex items-center justify-center cursor-pointer overflow-hidden group-hover:border-luxury-gold/50 transition-all relative"
+            >
+              {logoPreview ? (
+                <img src={logoPreview} alt="Logo" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-luxury-gold/50 flex flex-col items-center gap-1">
+                  <Camera className="w-6 h-6" />
+                  <span className="text-[8px] font-bold uppercase tracking-widest">Store Logo</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <Upload className="w-5 h-5 text-white" />
+              </div>
+            </label>
+          </div>
+
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-luxury-gold/10 border border-luxury-gold/20 text-luxury-gold text-[10px] font-bold uppercase tracking-widest mb-4">
-            <Store className="w-3 h-3" /> Partner Onboarding
+            <Store className="w-3 h-3" /> Become a Seller
           </div>
           <h1 className="text-4xl font-bold tracking-tighter mb-2">
-            Open Your Boutique
+            Start Your Store
           </h1>
           <p className="text-zinc-500 text-sm">
-            List your creations in the Synthetix catalog.
+            Sell your products on the Synthetix marketplace.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <InputField
+              icon={<User className="w-4 h-4" />}
+              placeholder="First Name"
+              value={formData.first_name}
+              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+              errors={errors.first_name}
+              required
+            />
+            <InputField
+              icon={<User className="w-4 h-4" />}
+              placeholder="Last Name"
+              value={formData.last_name}
+              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+              errors={errors.last_name}
+              required
+            />
+          </div>
+
           <InputField
-            icon={<User className="w-4 h-4" />}
-            placeholder="Legal Full Name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            errors={errors.first_name}
+            icon={<Store className="w-4 h-4" />}
+            placeholder="Store Name (e.g. Aether Collection)"
+            value={formData.store_name}
+            onChange={(e) => setFormData({ ...formData, store_name: e.target.value })}
+            errors={errors.store_name}
             required
           />
+
           <InputField
             icon={<Mail className="w-4 h-4" />}
             type="email"
@@ -136,6 +195,17 @@ const RegisterSellerPage = () => {
             errors={errors.email}
             required
           />
+
+          <InputField
+            icon={<Smartphone className="w-4 h-4" />}
+            type="tel"
+            placeholder="Business Phone"
+            value={formData.phone_number}
+            onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+            errors={errors.phone_number}
+            required
+          />
+
           <InputField
             icon={<Lock className="w-4 h-4" />}
             type={showPassword ? "text" : "password"}

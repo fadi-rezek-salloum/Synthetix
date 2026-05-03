@@ -30,14 +30,23 @@ const UserMenu = () => {
 
   if (!user) return null;
 
+  const avatarUrl = user.avatar || user.logo;
+  const fullAvatarUrl = avatarUrl 
+    ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:8000${avatarUrl}`)
+    : null;
+
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 group p-1 pr-3 bg-white/5 rounded-full border border-white/5 hover:border-white/20 transition-all focus:outline-none"
       >
-        <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-inner">
-          {user.first_name?.[0] || <User className="w-3 h-3" />}
+        <div className="w-7 h-7 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-inner overflow-hidden">
+          {fullAvatarUrl ? (
+            <img src={fullAvatarUrl} alt="User" className="w-full h-full object-cover" />
+          ) : (
+            user.first_name?.[0] || <User className="w-3 h-3" />
+          )}
         </div>
         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 group-hover:text-white transition-colors hidden sm:block">
           {user.first_name || "Account"}

@@ -12,11 +12,34 @@ class AddressSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, read_only=True)
+    avatar = serializers.SerializerMethodField()
+    logo = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ["id", "email", "role", "phone_number", "is_phone_verified", "addresses"]
+        fields = [
+            "id", 
+            "email", 
+            "first_name", 
+            "last_name", 
+            "role", 
+            "phone_number", 
+            "is_phone_verified", 
+            "addresses",
+            "avatar",
+            "logo"
+        ]
         read_only_fields = ["email", "role", "is_phone_verified"]
+
+    def get_avatar(self, obj):
+        if hasattr(obj, 'customer_profile') and obj.customer_profile.avatar:
+            return obj.customer_profile.avatar.url
+        return None
+
+    def get_logo(self, obj):
+        if hasattr(obj, 'seller_profile') and obj.seller_profile.store_logo:
+            return obj.seller_profile.store_logo.url
+        return None
 
 
 class CustomerProfileSerializer(serializers.ModelSerializer):

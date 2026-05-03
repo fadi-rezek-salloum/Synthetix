@@ -8,7 +8,20 @@ from .models import (
     ProductVariant,
     Review,
     StockLog,
+    Wishlist,
 )
+
+
+class WishlistSerializer(serializers.ModelSerializer):
+    products = ProductSerializer(many=True, read_only=True)
+    product_ids = serializers.PrimaryKeyRelatedField(
+        many=True, write_only=True, queryset=Product.objects.all(), source="products"
+    )
+
+    class Meta:
+        model = Wishlist
+        fields = ["id", "user", "products", "product_ids", "updated_at"]
+        read_only_fields = ["user"]
 
 
 class PriceHistorySerializer(serializers.ModelSerializer):

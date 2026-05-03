@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Product } from "@/types";
 import { productService } from "@/services/productService";
 import ProductCard from "../ui/ProductCard";
@@ -35,14 +36,21 @@ const ProductGrid = () => {
             Hand-selected pieces from our verified vendors.
           </p>
         </div>
-        <button className="text-sm font-bold tracking-widest uppercase hover:text-luxury-gold transition-colors">
+        <Link
+          href="/catalog"
+          className="text-sm font-bold tracking-widest uppercase hover:text-luxury-gold transition-colors"
+        >
           View All
-        </button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
         {products.map((product, index) => (
-          <ProductCard key={product.id} product={product} priority={index < 4} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            priority={index < 4}
+          />
         ))}
       </div>
     </section>

@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, viewsets
 from rest_framework.exceptions import PermissionDenied
 
-from .models import Category, Product, ProductImage, ProductVariant, Review, StockLog
+from .models import Category, Product, ProductImage, ProductVariant, Review, StockLog, Wishlist
 from .permissions import (
     IsAdminOrReadOnly,
     IsOwnerOrReadOnly,
@@ -17,11 +17,44 @@ from .serializers import (
     ProductVariantSerializer,
     ReviewSerializer,
     StockLogSerializer,
+    WishlistSerializer,
 )
 
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+class WishlistViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = WishlistSerializer
+
+    def get_queryset(self):
+        return Wishlist.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        obj, _ = Wishlist.objects.get_or_create(user=self.request.user)
+        return obj
+
+    @action(detail=False, methods=['post'])
+    def toggle(self, request):
+        product_id = request.data.get('product_id')
+        if not product_id:
+            return Response({"error": "product_id is required"}, status=400)
+            
+        wishlist = self.get_object()
+        try:
+            product = Product.objects.get(id=product_id)
+            if product in wishlist.products.all():
+                wishlist.products.remove(product)
+                status = "removed"
+            else:
+                wishlist.products.add(product)
+                status = "added"
+            
+            return Response({"status": status, "count": wishlist.products.count()})
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=404)
 
 import django_filters
-from .models import Category, Product, ProductImage, ProductVariant, Review, StockLog
 
 class ProductFilter(django_filters.FilterSet):
     min_price = django_filters.NumberFilter(field_name="base_price", lookup_expr='gte')

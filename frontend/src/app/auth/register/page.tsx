@@ -15,6 +15,9 @@ import {
   EyeOff,
   AlertCircle,
   MailCheck,
+  Smartphone,
+  Camera,
+  Upload,
 } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
 import { SocialAuth } from "@/components/auth/SocialAuth";
@@ -22,11 +25,15 @@ import { SocialAuth } from "@/components/auth/SocialAuth";
 const RegisterPage = () => {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     password1: "",
     password2: "",
+    phone_number: "",
+    avatar: null as File | null,
   });
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -55,7 +62,6 @@ const RegisterPage = () => {
       const data = await authService.register({
         ...formData,
         username: formData.email,
-        first_name: formData.name,
         role: "customer",
       });
       setUserEmail(formData.email);
@@ -117,29 +123,93 @@ const RegisterPage = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md glass p-10 rounded-[2.5rem] border-white/5 relative z-10"
       >
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center flex flex-col items-center">
+          <div className="relative group mb-6">
+            <input
+              type="file"
+              id="avatar-upload"
+              className="hidden"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setFormData({ ...formData, avatar: file });
+                  setAvatarPreview(URL.createObjectURL(file));
+                }
+              }}
+            />
+            <label
+              htmlFor="avatar-upload"
+              className="w-24 h-24 rounded-full bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer overflow-hidden group-hover:border-indigo-500/50 transition-all relative"
+            >
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-zinc-500 flex flex-col items-center gap-1">
+                  <Camera className="w-6 h-6" />
+                  <span className="text-[8px] font-bold uppercase tracking-widest">Add Photo</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <Upload className="w-5 h-5 text-white" />
+              </div>
+            </label>
+          </div>
+          
           <h1 className="text-4xl font-bold tracking-tighter mb-2">
-            Claim Your Identity
+            Join Synthetix
           </h1>
           <p className="text-zinc-500 text-sm italic">
-            &quot;Become part of the curation.&quot;
+            Create your account to start shopping.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <InputField
-            icon={<User className="w-4 h-4" />}
-            type="text"
-            placeholder="Full Name"
-            errors={errors.first_name}
-            onChange={(e: any) => setFormData({ ...formData, name: e.target.value })}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <InputField
+              icon={<User className="w-4 h-4" />}
+              type="text"
+              placeholder="First Name"
+              value={formData.first_name}
+              onChange={(e: any) =>
+                setFormData({ ...formData, first_name: e.target.value })
+              }
+              errors={errors.first_name}
+              required
+            />
+            <InputField
+              icon={<User className="w-4 h-4" />}
+              type="text"
+              placeholder="Last Name"
+              value={formData.last_name}
+              onChange={(e: any) =>
+                setFormData({ ...formData, last_name: e.target.value })
+              }
+              errors={errors.last_name}
+              required
+            />
+          </div>
 
           <InputField
             icon={<Mail className="w-4 h-4" />}
             type="email"
             placeholder="Email Address"
+            value={formData.email}
+            onChange={(e: any) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
             errors={errors.email}
-            onChange={(e: any) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+
+          <InputField
+            icon={<Smartphone className="w-4 h-4" />}
+            type="tel"
+            placeholder="Phone Number (Optional)"
+            value={formData.phone_number}
+            onChange={(e: any) =>
+              setFormData({ ...formData, phone_number: e.target.value })
+            }
+            errors={errors.phone_number}
           />
 
           <div className="relative group">

@@ -59,7 +59,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     localStorage.setItem("synthetix_auth_sync", Date.now().toString());
     try {
+      // We call logout but don't care if it fails (e.g. already logged out)
       await authService.logout();
+    } catch (err) {
+      console.warn("Logout request failed, clearing local state anyway.", err);
     } finally {
       setUser(null);
       router.push("/auth/login");

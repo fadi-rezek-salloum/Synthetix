@@ -8,6 +8,7 @@ from .views import (
     ProductViewSet,
     ReviewViewSet,
     StockLogViewSet,
+    WishlistViewSet,
 )
 
 router = DefaultRouter()
@@ -16,6 +17,7 @@ router.register(r"categories", CategoryViewSet)
 router.register(r"images", ProductImageViewSet)
 router.register(r"variants", ProductVariantViewSet)
 router.register(r"reviews", ReviewViewSet)
+router.register(r"wishlist", WishlistViewSet, basename="wishlist")
 router.register(r"stock-logs", StockLogViewSet, basename="stock-logs")
 
 urlpatterns = [

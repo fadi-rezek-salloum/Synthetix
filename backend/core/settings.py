@@ -38,7 +38,7 @@ THIRD_PARTY_APPS = [
     "rest_framework_simplejwt.token_blacklist",
 ]
 
-USER_APPS = ["catalog", "intelligence", "accounts"]
+USER_APPS = ["catalog", "intelligence", "accounts", "orders"]
 
 INSTALLED_APPS = LOCAL_APPS + THIRD_PARTY_APPS + USER_APPS
 

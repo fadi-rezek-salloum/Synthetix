@@ -8,6 +8,8 @@ from .views import (
     AddressViewSet,
     CustomerProfileView,
     GoogleLogin,
+    GoogleSocialCheckView,
+    GoogleSocialRegisterView,
     SellerProfileView,
 )
 
@@ -31,6 +33,8 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     path("auth/google/", GoogleLogin.as_view(), name="google_login"),
+    path("auth/google/check/", GoogleSocialCheckView.as_view(), name="google_check"),
+    path("auth/google/register/", GoogleSocialRegisterView.as_view(), name="google_register"),
     path("profile/customer/", CustomerProfileView.as_view(), name="customer-profile"),
     path("profile/seller/", SellerProfileView.as_view(), name="seller-profile"),
     path("", include(router.urls)),

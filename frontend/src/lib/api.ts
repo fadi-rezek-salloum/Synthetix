@@ -20,7 +20,9 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
       ...options,
       credentials: "include",
       headers: {
-        "Content-Type": "application/json",
+        ...(options.body instanceof FormData
+          ? {}
+          : { "Content-Type": "application/json" }),
         ...options.headers,
       },
     });

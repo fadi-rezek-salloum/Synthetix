@@ -10,6 +10,21 @@ export const authService = {
   },
 
   register: async (credentials: RegisterCredentials) => {
+    const hasFile = credentials.avatar || credentials.logo;
+    
+    if (hasFile) {
+      const formData = new FormData();
+      Object.entries(credentials).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value as string | Blob);
+        }
+      });
+      return await apiFetch("/accounts/auth/registration/", {
+        method: "POST",
+        body: formData,
+      });
+    }
+
     return await apiFetch("/accounts/auth/registration/", {
       method: "POST",
       body: JSON.stringify(credentials),
@@ -43,6 +58,18 @@ export const authService = {
     return await apiFetch(`/accounts/auth/${provider}/`, {
       method: "POST",
       body: JSON.stringify({ access_token: accessToken }),
+    });
+  },
+  socialCheck: async (provider: "google", accessToken: string) => {
+    return await apiFetch(`/accounts/auth/${provider}/check/`, {
+      method: "POST",
+      body: JSON.stringify({ access_token: accessToken }),
+    });
+  },
+  socialRegisterFinish: async (provider: "google", data: {access_token: string, phone_number: string, password: string}) => {
+    return await apiFetch(`/accounts/auth/${provider}/register/`, {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   },
 };

@@ -11,7 +11,7 @@ export const productService = {
     min_price?: number;
     max_price?: number;
     ordering?: string;
-  }): Promise<PaginatedResponse<Product>> => {
+  } = {}): Promise<PaginatedResponse<Product>> => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.set("page", params.page.toString());
     if (params.category) queryParams.set("category__slug", params.category);

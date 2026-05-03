@@ -1,0 +1,5 @@
+- wishlist
+- cart
+- orders
+- profile -> address and payment methods
+- 

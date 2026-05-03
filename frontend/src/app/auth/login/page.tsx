@@ -60,7 +60,7 @@ const LoginPage = () => {
             Welcome Back
           </h1>
           <p className="text-zinc-500 text-sm">
-            Access your unique identity profile.
+            Sign in to your account.
           </p>
         </div>
 
@@ -104,7 +104,7 @@ const LoginPage = () => {
               href="/auth/forgot-password"
               className="text-[10px] text-zinc-500 hover:text-white transition-colors font-medium"
             >
-              Forgotten your credentials?
+              Forgot password?
             </Link>
           </div>
 
