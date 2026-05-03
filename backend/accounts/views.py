@@ -1,7 +1,7 @@
 from allauth.socialaccount.models import SocialAccount, SocialApp
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
-from dj_rest_auth.jwt_auth import set_jwt_cookies
+from dj_rest_auth.jwt_auth import get_refresh_view, set_jwt_cookies, unset_jwt_cookies
 from dj_rest_auth.utils import jwt_encode
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -18,6 +18,24 @@ from .permissions import IsCustomer, IsSeller
 from .serializers import AddressSerializer, CustomerProfileSerializer, SellerProfileSerializer, UserSerializer
 
 User = get_user_model()
+
+
+class SafeTokenRefreshView(get_refresh_view()):
+    def post(self, request, *args, **kwargs):
+        try:
+            return super().post(request, *args, **kwargs)
+        except User.DoesNotExist:
+            response = Response(
+                {"detail": "User not found", "code": "user_not_found"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            unset_jwt_cookies(response)
+            return response
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        if response.status_code == status.HTTP_401_UNAUTHORIZED:
+            unset_jwt_cookies(response)
+        return super().finalize_response(request, response, *args, **kwargs)
 
 class CustomerProfileView(generics.RetrieveUpdateAPIView):
 

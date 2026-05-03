@@ -10,6 +10,7 @@ from .views import (
     GoogleLogin,
     GoogleSocialCheckView,
     GoogleSocialRegisterView,
+    SafeTokenRefreshView,
     SellerProfileView,
 )
 
@@ -17,6 +18,7 @@ router = DefaultRouter()
 router.register(r"addresses", AddressViewSet, basename="address")
 
 urlpatterns = [
+    path("auth/token/refresh/", SafeTokenRefreshView.as_view(), name="token_refresh"),
     path("auth/", include("dj_rest_auth.urls")),
     path("auth/registration/", include("dj_rest_auth.registration.urls")),
     path(

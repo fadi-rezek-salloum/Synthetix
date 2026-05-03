@@ -31,7 +31,7 @@ export async function apiFetch<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const executeRequest = async (): Promise<T> => {
+  const executeRequest = async (hasRetried = false): Promise<T> => {
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       credentials: "include",
@@ -51,11 +51,13 @@ export async function apiFetch<T = unknown>(
       data = { detail: "Server response was not valid JSON." };
     }
 
-    if (
-      response.status === 401 &&
+    const canAttemptRefresh =
+      (response.status === 401 || response.status === 403) &&
+      !hasRetried &&
       endpoint !== "/accounts/auth/login/" &&
-      endpoint !== "/accounts/auth/token/refresh/"
-    ) {
+      endpoint !== "/accounts/auth/token/refresh/";
+
+    if (canAttemptRefresh) {
       if (!isRefreshing) {
         isRefreshing = true;
 
@@ -71,7 +73,7 @@ export async function apiFetch<T = unknown>(
           if (refreshRes.ok) {
             isRefreshing = false;
             onTokenRefreshed("success");
-            return await executeRequest();
+            return await executeRequest(true);
           } else {
             // Refresh failed (e.g. 401 or 403)
             isRefreshing = false;
@@ -88,9 +90,9 @@ export async function apiFetch<T = unknown>(
       return new Promise((resolve, reject) => {
         addRefreshSubscriber((status) => {
           if (status === "success") {
-            resolve(executeRequest());
+            resolve(executeRequest(true));
           } else {
-            reject(new Error("Refresh failed"));
+            reject({ detail: "Refresh failed" });
           }
         });
       });
