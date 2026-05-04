@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Product } from "@/types";
 import { apiFetch } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { useAuth } from "./AuthContext";
 
 interface WishlistContextType {
@@ -28,7 +29,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
         const products = data.results?.[0]?.products || [];
         setWishlistIds(products.map((p) => p.id));
       } catch (error) {
-        console.error(error);
+        logger.error("Failed to load wishlist", error, { component: "WishlistContext" });
       } finally {
         setLoading(false);
       }
@@ -59,7 +60,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
         setWishlistIds((prev) => prev.filter((id) => id !== productId));
       }
     } catch (err) {
-      console.error("Failed to toggle wishlist:", err);
+      logger.error("Failed to toggle wishlist", err, { component: "WishlistContext", productId });
     }
   };
 

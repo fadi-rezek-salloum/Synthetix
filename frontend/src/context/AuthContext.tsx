@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@/types";
 import { authService } from "@/services/authService";
+import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
@@ -62,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // We call logout but don't care if it fails (e.g. already logged out)
       await authService.logout();
     } catch (err) {
-      console.warn("Logout request failed, clearing local state anyway.", err);
+      logger.warn("Logout request failed, clearing local state anyway", { component: "AuthContext" });
     } finally {
       setUser(null);
       router.push("/auth/login");

@@ -5,6 +5,8 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ToastContainer } from "@/components/ToastContainer";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
@@ -36,21 +38,24 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <GoogleOAuthProvider
-          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
-        >
-          <AuthProvider>
-            <WishlistProvider>
-              <CartProvider>
-                <Header />
-                <div className="flex-grow">
-                  {children}
-                </div>
-                <Footer />
-              </CartProvider>
-            </WishlistProvider>
-          </AuthProvider>
-        </GoogleOAuthProvider>
+        <ErrorBoundary>
+          <GoogleOAuthProvider
+            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
+          >
+            <AuthProvider>
+              <WishlistProvider>
+                <CartProvider>
+                  <Header />
+                  <div className="flex-grow">
+                    {children}
+                  </div>
+                  <Footer />
+                  <ToastContainer />
+                </CartProvider>
+              </WishlistProvider>
+            </AuthProvider>
+          </GoogleOAuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

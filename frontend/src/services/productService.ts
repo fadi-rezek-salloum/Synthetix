@@ -33,4 +33,9 @@ export const productService = {
     const response = await apiFetch<Product>(`/catalog/products/${slug}/`);
     return response;
   },
+
+  getBrands: async (): Promise<string[]> => {
+    const response = await apiFetch<{ brands: string[] }>("/catalog/products/brands/");
+    return response.brands || [];
+  },
 };

@@ -1,0 +1,72 @@
+.phone-input-wrapper {
+  width: 100%;
+}
+
+.phone-input-wrapper .PhoneInput {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 0;
+  transition: all 0.2s;
+}
+
+.phone-input-wrapper .PhoneInput:focus-within {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.phone-input-wrapper.has-error .PhoneInput {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.phone-input-wrapper.has-error .PhoneInput:focus-within {
+  border-color: rgba(239, 68, 68, 0.8);
+}
+
+.phone-input-wrapper .PhoneInputCountrySelect {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 1rem 0.5rem 1rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.phone-input-wrapper .PhoneInputCountryIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.phone-input-wrapper .PhoneInputCountrySelectArrow {
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: 0.25rem;
+}
+
+.phone-input-wrapper .PhoneInputCountrySelect:focus {
+  outline: none;
+}
+
+.phone-input-wrapper .PhoneInputInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 1rem 1rem 1rem 0.5rem;
+  font-size: 0.875rem;
+  outline: none;
+  min-width: 0;
+}
+
+.phone-input-wrapper .PhoneInputInput::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.phone-input-wrapper .PhoneInputInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

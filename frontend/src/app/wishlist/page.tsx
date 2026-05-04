@@ -6,6 +6,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { Product } from "@/types";
 import { apiFetch } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import ProductCard from "@/components/ui/ProductCard";
 import { Heart, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -22,7 +23,7 @@ export default function WishlistPage() {
         .then((data) => {
           setProducts(data.results?.[0]?.products || []);
         })
-        .catch(console.error)
+        .catch((err) => logger.error("Failed to load wishlist", err, { component: "WishlistPage" }))
         .finally(() => setLoading(false));
     }
   }, [user, wishlistIds]); // Re-fetch when wishlistIds change to keep in sync

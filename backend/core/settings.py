@@ -137,6 +137,7 @@ REST_AUTH = {
     "JWT_AUTH_SAMESITE": "Lax",
     "JWT_AUTH_SECURE": COOKIE_SECURE,
     "REGISTER_SERIALIZER": "accounts.auth_serializers.CustomRegisterSerializer",
+    "USER_DETAILS_SERIALIZER": "accounts.serializers.UserSerializer",
 }
 
 CSRF_COOKIE_SECURE = COOKIE_SECURE

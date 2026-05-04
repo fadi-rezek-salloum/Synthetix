@@ -48,7 +48,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name?: string;
-  role: "customer" | "seller";
+  role: "CUSTOMER" | "SELLER" | "ADMIN";
   phone_number?: string;
   avatar?: string;
   logo?: string;
@@ -121,5 +121,5 @@ export interface RegisterCredentials {
   logo?: File | null;
   // Seller Profile Fields
   store_name?: string;
-  role: "customer" | "seller";
+  role: "CUSTOMER" | "SELLER";
 }

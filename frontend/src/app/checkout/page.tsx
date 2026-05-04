@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Lock, CreditCard, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 
 export default function CheckoutPage() {
@@ -31,7 +32,7 @@ export default function CheckoutPage() {
       });
       setStep(3); // Success step
     } catch (err) {
-      console.error("Checkout failed:", err);
+      logger.error("Checkout failed", err, { component: "CheckoutPage" });
     } finally {
       setIsProcessing(false);
     }

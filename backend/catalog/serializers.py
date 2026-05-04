@@ -43,10 +43,16 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    user_email = serializers.ReadOnlyField(source="user.email")
+    user_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Review
-        fields = ["id", "product", "user", "rating", "comment", "created_at"]
-        read_only_fields = ["user"]
+        fields = ["id", "product", "user", "user_email", "user_name", "rating", "comment", "created_at"]
+        read_only_fields = ["user", "user_email"]
+
+    def get_user_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.email
 
 
 class ProductSerializer(serializers.ModelSerializer):

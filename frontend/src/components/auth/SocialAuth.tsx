@@ -2,10 +2,13 @@ import React, { useState } from "react";
 import { authService } from "@/services/authService";
 import { useGoogleLogin } from "@react-oauth/google";
 import { useAuth } from "@/context/AuthContext";
+import { logger } from "@/lib/logger";
 import { motion, AnimatePresence } from "framer-motion";
-import { Smartphone, Lock, ArrowRight, User as UserIcon, X } from "lucide-react";
+import { Lock, ArrowRight, User as UserIcon, X } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
+import { PhoneInputField } from "@/components/ui/PhoneInput";
 import { toApiError } from "@/lib/api";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -67,14 +70,14 @@ export const SocialAuth = () => {
           setShowCompletionForm(true);
         }
       } catch (err: unknown) {
-        console.error("Social Auth Error:", err);
+        logger.error("Social Auth failed", err, { component: "SocialAuth", provider: "google" });
         setError("Failed to authenticate with Google. Please try again.");
       } finally {
         setLoading(false);
       }
     },
     onError: (errorResponse) => {
-      console.error(errorResponse);
+      logger.error("Google Login failed", new Error(JSON.stringify(errorResponse)), { component: "SocialAuth" });
       setError("Google Login was cancelled or failed.");
     },
   });
@@ -83,10 +86,8 @@ export const SocialAuth = () => {
     e.preventDefault();
     if (!tempGoogleToken) return;
 
-    // Frontend Validation
-    const cleanPhone = completionData.phone_number.replace(/\D/g, "");
-    if (cleanPhone.length < 10) {
-      setError("Please enter a valid phone number (at least 10 digits).");
+    if (!isValidPhoneNumber(completionData.phone_number)) {
+      setError("Please enter a valid phone number.");
       return;
     }
 
@@ -192,14 +193,12 @@ export const SocialAuth = () => {
               )}
 
               <form onSubmit={handleCompletionSubmit} className="space-y-4">
-                <InputField
-                  icon={<Smartphone className="w-4 h-4" />}
-                  type="tel"
-                  placeholder="Phone Number"
-                  value={completionData.phone_number}
-                  onChange={(e) => setCompletionData({...completionData, phone_number: e.target.value})}
-                  required
-                />
+              <PhoneInputField
+                value={completionData.phone_number}
+                onChange={(value) => setCompletionData({...completionData, phone_number: value})}
+                placeholder="Phone Number"
+                required
+              />
                 <InputField
                   icon={<Lock className="w-4 h-4" />}
                   type="password"

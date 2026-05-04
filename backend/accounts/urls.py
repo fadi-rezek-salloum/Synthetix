@@ -5,6 +5,7 @@ from django.views.generic import RedirectView
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    AccountDeleteView,
     AddressViewSet,
     CustomerProfileView,
     GoogleLogin,
@@ -39,5 +40,6 @@ urlpatterns = [
     path("auth/google/register/", GoogleSocialRegisterView.as_view(), name="google_register"),
     path("profile/customer/", CustomerProfileView.as_view(), name="customer-profile"),
     path("profile/seller/", SellerProfileView.as_view(), name="seller-profile"),
+    path("account/delete/", AccountDeleteView.as_view(), name="account-delete"),
     path("", include(router.urls)),
 ]

@@ -20,10 +20,42 @@ class CartViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def add_item(self, request):
         variant_id = request.data.get('variant_id')
-        quantity = int(request.data.get('quantity', 1))
+        
+        # Validate variant_id
+        if not variant_id:
+            return Response({"error": "variant_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate and parse quantity
+        try:
+            quantity = int(request.data.get('quantity', 1))
+        except (ValueError, TypeError):
+            return Response({"error": "quantity must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate quantity is positive
+        if quantity <= 0:
+            return Response({"error": "quantity must be greater than 0"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Limit quantity to reasonable maximum
+        MAX_QUANTITY = 999
+        if quantity > MAX_QUANTITY:
+            return Response({"error": f"quantity cannot exceed {MAX_QUANTITY}"}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             variant = ProductVariant.objects.get(id=variant_id)
+        except ProductVariant.DoesNotExist:
+            return Response({"error": "Variant not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check stock availability
+        if variant.stock <= 0:
+            return Response({"error": "This item is out of stock"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if quantity > variant.stock:
+            return Response({
+                "error": f"Only {variant.stock} item(s) available in stock",
+                "available": variant.stock
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
             cart = self.get_object()
             
             cart_item, created = CartItem.objects.get_or_create(
@@ -31,20 +63,28 @@ class CartViewSet(viewsets.ModelViewSet):
             )
             
             if not created:
-                cart_item.quantity += quantity
+                # Check total quantity doesn't exceed stock
+                total_quantity = cart_item.quantity + quantity
+                if total_quantity > variant.stock:
+                    return Response({
+                        "error": f"Only {variant.stock} item(s) available in stock",
+                        "requested": total_quantity,
+                        "available": variant.stock
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                cart_item.quantity = total_quantity
             else:
                 cart_item.quantity = quantity
                 
             cart_item.save()
             return Response(CartSerializer(cart).data)
-        except ProductVariant.DoesNotExist:
-            return Response({"error": "Variant not found"}, status=404)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
     def remove_item(self, request):
         item_id = request.data.get('item_id')
         if not item_id:
-            return Response({"error": "item_id is required"}, status=400)
+            return Response({"error": "item_id is required"}, status=status.HTTP_400_BAD_REQUEST)
             
         try:
             cart = self.get_object()
@@ -52,7 +92,7 @@ class CartViewSet(viewsets.ModelViewSet):
             item.delete()
             return Response(CartSerializer(cart).data)
         except CartItem.DoesNotExist:
-            return Response({"error": "Item not found in your cart"}, status=404)
+            return Response({"error": "Item not found in your cart"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -64,15 +104,36 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def checkout(self, request):
-        cart = Cart.objects.get(user=self.request.user)
+        # Validate shipping address
+        shipping_address = request.data.get('shipping_address', '').strip()
+        if not shipping_address:
+            return Response({
+                "error": "shipping_address is required and cannot be empty"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(shipping_address) < 10:
+            return Response({
+                "error": "shipping_address must be at least 10 characters long"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(shipping_address) > 500:
+            return Response({
+                "error": "shipping_address is too long (maximum 500 characters)"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            cart = Cart.objects.get(user=self.request.user)
+        except Cart.DoesNotExist:
+            return Response({"error": "No cart found"}, status=status.HTTP_404_NOT_FOUND)
+        
         if not cart.items.exists():
-            return Response({"error": "Cart is empty"}, status=400)
+            return Response({"error": "Cart is empty"}, status=status.HTTP_400_BAD_REQUEST)
             
         # Create order
         order = Order.objects.create(
             user=self.request.user,
             total_amount=cart.total_price,
-            shipping_address=request.data.get('shipping_address', 'Default Address'),
+            shipping_address=shipping_address,
         )
         
         # Move items to order

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { productService } from "@/services/productService";
 import { categoryService } from "@/services/categoryService";
+import { logger } from "@/lib/logger";
 import { Product, Category, PaginatedResponse } from "@/types";
 import ProductCard from "@/components/ui/ProductCard";
 
@@ -32,6 +33,7 @@ function CatalogContent() {
   // Component State
   const [data, setData] = useState<PaginatedResponse<Product> | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -39,7 +41,7 @@ function CatalogContent() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [prodData, catData] = await Promise.all([
+        const [prodData, catData, brandsData] = await Promise.all([
           productService.getProducts({
             page: currentPage,
             category: currentCategory,
@@ -50,11 +52,13 @@ function CatalogContent() {
             max_price: maxPrice ? parseFloat(maxPrice) : undefined,
           }),
           categoryService.getCategories(),
+          productService.getBrands(),
         ]);
         setData(prodData);
         setCategories(catData);
+        setBrands(brandsData);
       } catch (error) {
-        console.error("Failed to load catalog:", error);
+        logger.error("Failed to load catalog", error, { component: "CatalogPage" });
       } finally {
         setLoading(false);
       }
@@ -84,7 +88,6 @@ function CatalogContent() {
 
   const totalPages = data ? Math.ceil(data.count / 20) : 0; // Backend PAGE_SIZE is 20
 
-  const brands = ["Synthetix", "Aether", "Void", "Neo-Tokyo", "CyberCore"];
   const genders = [
     { label: "All", value: "" },
     { label: "Mens", value: "M" },

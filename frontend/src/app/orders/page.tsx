@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { Order, PaginatedResponse } from "@/types";
 import { apiFetch } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { Package, Clock, CheckCircle2, Truck, XCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -20,7 +21,7 @@ export default function OrdersPage() {
         .then((data) => {
           setOrders(data.results || []);
         })
-        .catch(console.error)
+        .catch((err) => logger.error("Failed to load orders", err, { component: "OrdersPage" }))
         .finally(() => setLoading(false));
     }
   }, [user]);

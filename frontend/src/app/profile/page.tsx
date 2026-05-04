@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { User, Mail, Package, Heart, MapPin, CreditCard } from "lucide-react";
 import { Order, Product } from "@/types";
@@ -40,7 +41,7 @@ export default function ProfilePage() {
             payments: 0 // Placeholder for now
           });
         } catch (err) {
-          console.error("Failed to fetch profile stats:", err);
+          logger.error("Failed to fetch profile stats", err, { component: "ProfilePage" });
         }
       };
       fetchStats();
@@ -59,7 +60,7 @@ export default function ProfilePage() {
 
   const avatarUrl = user.avatar || user.logo;
   const fullAvatarUrl = avatarUrl 
-    ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:8000${avatarUrl}`)
+    ? (avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${avatarUrl}`)
     : null;
 
   return (

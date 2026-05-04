@@ -90,4 +90,21 @@ export const authService = {
       body: JSON.stringify(data),
     });
   },
+  changePassword: async (data: { old_password: string; new_password1: string; new_password2: string }) => {
+    return await apiFetch("/accounts/auth/password/change/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+  updateProfile: async (data: { first_name?: string; last_name?: string; phone_number?: string }) => {
+    return await apiFetch<User>("/accounts/auth/user/", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+  deleteAccount: async () => {
+    return await apiFetch("/accounts/account/delete/", {
+      method: "DELETE",
+    });
+  },
 };

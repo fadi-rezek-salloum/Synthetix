@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Product } from "@/types";
 import { productService } from "@/services/productService";
+import { logger } from "@/lib/logger";
 import ProductCard from "../ui/ProductCard";
 
 const ProductGrid = () => {
@@ -14,7 +15,7 @@ const ProductGrid = () => {
     productService
       .getProducts()
       .then((data) => setProducts(data.results))
-      .catch(console.error)
+      .catch((err) => logger.error("Failed to load products", err, { component: "ProductGrid" }))
       .finally(() => setLoading(false));
   }, []);
 

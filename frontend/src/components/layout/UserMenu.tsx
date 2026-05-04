@@ -34,7 +34,7 @@ const UserMenu = () => {
 
   const avatarUrl = user.avatar || user.logo;
   const fullAvatarUrl = avatarUrl 
-    ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:8000${avatarUrl}`)
+    ? (avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${avatarUrl}`)
     : null;
 
   return (
@@ -76,7 +76,7 @@ const UserMenu = () => {
               <p className="text-sm font-medium text-white truncate">
                 {user.email}
               </p>
-              {user.role === "seller" && (
+              {user.role === "SELLER" && (
                 <span className="inline-block mt-2 text-[8px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full uppercase tracking-widest font-bold">
                   Seller Account
                 </span>
@@ -84,7 +84,7 @@ const UserMenu = () => {
             </div>
 
             <div className="space-y-1">
-              {user.role === "seller" && (
+              {user.role === "SELLER" && (
                 <MenuLink
                   href="/seller"
                   icon={<LayoutDashboard className="w-4 h-4" />}

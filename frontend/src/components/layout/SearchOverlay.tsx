@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ArrowRight, Sparkles } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { logger } from "@/lib/logger";
 import { Product } from "@/types";
 import Link from "next/link";
 
@@ -25,7 +26,7 @@ export const SearchOverlay = ({ isOpen, onClose }: SearchOverlayProps) => {
           `/catalog/products/?search=${encodeURIComponent(query)}`,
         )
           .then((data) => setResults(data.results || []))
-          .catch(console.error)
+          .catch((err) => logger.error("Search failed", err, { component: "SearchOverlay", query }))
           .finally(() => setLoading(false));
       }, 300);
       return () => clearTimeout(timer);

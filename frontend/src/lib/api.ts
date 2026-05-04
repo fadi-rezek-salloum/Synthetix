@@ -55,7 +55,9 @@ export async function apiFetch<T = unknown>(
       (response.status === 401 || response.status === 403) &&
       !hasRetried &&
       endpoint !== "/accounts/auth/login/" &&
-      endpoint !== "/accounts/auth/token/refresh/";
+      endpoint !== "/accounts/auth/token/refresh/" &&
+      endpoint !== "/accounts/auth/password/change/" &&
+      endpoint !== "/accounts/account/delete/";
 
     if (canAttemptRefresh) {
       if (!isRefreshing) {

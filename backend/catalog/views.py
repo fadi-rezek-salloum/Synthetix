@@ -1,7 +1,8 @@
 import django_filters
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
+from rest_framework import filters, permissions, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -92,8 +93,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         base_query = (
             Product.objects.all()
-            .select_related("category")
-            .prefetch_related("images", "variants", "reviews")
+            .select_related("category", "vendor")
+            .prefetch_related("images", "variants", "reviews__user")
         )
 
         if self.request.user.is_authenticated and self.request.user.role == "SELLER":
@@ -103,6 +104,19 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(vendor=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def brands(self, request):
+        """Get list of distinct brands"""
+        brands = (
+            Product.objects.filter(is_active=True)
+            .values_list('brand', flat=True)
+            .distinct()
+            .order_by('brand')
+        )
+        return Response({
+            "brands": list(brands)
+        }, status=status.HTTP_200_OK)
 
 
 class ProductImageViewSet(viewsets.ModelViewSet):
@@ -131,8 +145,11 @@ class ProductVariantViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    queryset = Review.objects.all()
+
+    def get_queryset(self):
+        return Review.objects.select_related("user", "product").all()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

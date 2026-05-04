@@ -1,5 +1,6 @@
 from dj_rest_auth.registration.serializers import RegisterSerializer
 from rest_framework import serializers
+import phonenumbers
 
 from .models import CustomerProfile, SellerProfile, User
 
@@ -8,7 +9,7 @@ class CustomRegisterSerializer(RegisterSerializer):
     role = serializers.ChoiceField(choices=User.Role.choices, default=User.Role.CUSTOMER)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
-    phone_number = serializers.CharField(required=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True)
     
     avatar = serializers.ImageField(required=False, allow_null=True)
     logo = serializers.ImageField(required=False, allow_null=True)
@@ -17,11 +18,16 @@ class CustomRegisterSerializer(RegisterSerializer):
     store_name = serializers.CharField(required=False, allow_blank=True)
 
     def validate_phone_number(self, value):
-        import re
-        clean_phone = re.sub(r'\D', '', value)
-        if len(clean_phone) < 10:
-            raise serializers.ValidationError("Please enter a valid phone number with at least 10 digits.")
-        return value
+        if not value:
+            return value
+        
+        try:
+            parsed = phonenumbers.parse(value, None)
+            if not phonenumbers.is_valid_number(parsed):
+                raise serializers.ValidationError("Please enter a valid phone number.")
+            return phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.E164)
+        except phonenumbers.NumberParseException:
+            raise serializers.ValidationError("Please enter a valid phone number with country code.")
 
     def validate_password(self, value):
         from django.contrib.auth.password_validation import validate_password

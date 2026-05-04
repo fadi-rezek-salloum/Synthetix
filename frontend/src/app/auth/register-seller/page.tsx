@@ -11,13 +11,14 @@ import {
   User,
   MailCheck,
   Store,
-  Smartphone,
   Camera,
   Upload,
 } from "lucide-react";
 import { InputField } from "@/components/ui/Input";
+import { PhoneInputField } from "@/components/ui/PhoneInput";
 import { SocialAuth } from "@/components/auth/SocialAuth";
 import { toApiError } from "@/lib/api";
+import { isValidPhoneNumber } from "libphonenumber-js";
 
 const RegisterSellerPage = () => {
   const [formData, setFormData] = useState({
@@ -50,6 +51,10 @@ const RegisterSellerPage = () => {
       return setErrors({ password2: ["Passwords do not match"] });
     }
 
+    if (!isValidPhoneNumber(formData.phone_number)) {
+      return setErrors({ phone_number: ["Please enter a valid phone number"] });
+    }
+
     setLoading(true);
     setErrors({});
 
@@ -57,7 +62,7 @@ const RegisterSellerPage = () => {
       await authService.register({
         ...formData,
         username: formData.email,
-        role: "seller", // Hardcoded for this page
+        role: "SELLER", // Hardcoded for this page
       });
       setUserEmail(formData.email);
       setRegistered(true);
@@ -191,13 +196,11 @@ const RegisterSellerPage = () => {
             required
           />
 
-          <InputField
-            icon={<Smartphone className="w-4 h-4" />}
-            type="tel"
-            placeholder="Business Phone"
+          <PhoneInputField
             value={formData.phone_number}
-            onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-            errors={errors.phone_number}
+            onChange={(value) => setFormData({ ...formData, phone_number: value })}
+            error={errors.phone_number}
+            placeholder="Business Phone"
             required
           />
 

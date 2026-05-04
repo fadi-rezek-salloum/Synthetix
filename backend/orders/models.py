@@ -20,9 +20,15 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
-    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items", db_index=True)
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, db_index=True)
     quantity = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        # Composite index for efficient lookups
+        indexes = [
+            models.Index(fields=['cart', 'variant']),
+        ]
 
     @property
     def subtotal(self):
@@ -42,10 +48,10 @@ class Order(models.Model):
         CANCELLED = "CANCELLED", _("Cancelled")
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders", db_index=True
     )
     status = models.CharField(
-        max_length=20, choices=Status.choices, default=Status.PENDING
+        max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True
     )
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     
@@ -53,22 +59,32 @@ class Order(models.Model):
     shipping_address = models.TextField()
     tracking_number = models.CharField(max_length=100, blank=True, null=True)
     
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+            models.Index(fields=['status']),
+        ]
 
     def __str__(self):
         return f"Order #{self.id} by {self.user.email}"
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items", db_index=True)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, db_index=True)
     variant_info = models.CharField(max_length=255) # Snapshot of variant details
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2) # Snapshot of price at purchase
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['order']),
+            models.Index(fields=['product']),
+        ]
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} (Order #{self.order.id})"

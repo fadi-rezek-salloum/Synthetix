@@ -3,6 +3,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Cart } from "@/types";
 import { apiFetch } from "@/lib/api";
+import { logger } from "@/lib/logger";
+import NotificationService from "@/lib/notificationService";
 import { useAuth } from "./AuthContext";
 
 interface CartContextType {
@@ -26,7 +28,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       const paginatedCart = data as { results?: Cart[] };
       setCart(Array.isArray(paginatedCart.results) ? paginatedCart.results[0] || null : data as Cart);
     } catch (err) {
-      console.error("Failed to fetch cart:", err);
+      logger.error("Failed to fetch cart", err, { component: "CartContext" });
     }
   }, [user]);
 
@@ -52,8 +54,11 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ variant_id: variantId, quantity }),
       });
       setCart(updatedCart);
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
+      NotificationService.success("Item added to cart");
+    } catch (err: any) {
+      const errorMsg = err?.error || "Failed to add item to cart";
+      logger.error("Failed to add to cart", err, { component: "CartContext", variantId, quantity });
+      NotificationService.error(errorMsg);
     }
   };
 
@@ -67,8 +72,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         body: JSON.stringify({ item_id: itemId }),
       });
       await fetchCart();
+      NotificationService.success("Item removed from cart");
     } catch (err) {
-      console.error("Failed to remove from cart:", err);
+      logger.error("Failed to remove from cart", err, { component: "CartContext", itemId });
+      NotificationService.error("Failed to remove item from cart");
     }
   };
 
