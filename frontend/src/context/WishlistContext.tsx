@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Product } from "@/types";
-import { apiFetch } from "@/lib/api";
+import { wishlistService } from "@/services/wishlistService";
 import { logger } from "@/lib/logger";
 import { useAuth } from "./AuthContext";
 
@@ -12,9 +12,15 @@ interface WishlistContextType {
   loading: boolean;
 }
 
-const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
+const WishlistContext = createContext<WishlistContextType | undefined>(
+  undefined,
+);
 
-export const WishlistProvider = ({ children }: { children: React.ReactNode }) => {
+export const WishlistProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const { user } = useAuth();
   const [wishlistIds, setWishlistIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
@@ -23,13 +29,12 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
     const loadWishlist = async () => {
       setLoading(true);
       try {
-        const data = await apiFetch<{ results?: { products?: Product[] }[] }>(
-          "/catalog/wishlist/",
-        );
-        const products = data.results?.[0]?.products || [];
+        const products = await wishlistService.getWishlist();
         setWishlistIds(products.map((p) => p.id));
       } catch (error) {
-        logger.error("Failed to load wishlist", error, { component: "WishlistContext" });
+        logger.error("Failed to load wishlist", error, {
+          component: "WishlistContext",
+        });
       } finally {
         setLoading(false);
       }
@@ -44,23 +49,20 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
 
   const toggleWishlist = async (productId: number) => {
     if (!user) return;
-    
+
     try {
-      const res = await apiFetch<{ status: "added" | "removed" }>(
-        "/catalog/wishlist/toggle/",
-        {
-        method: "POST",
-        body: JSON.stringify({ product_id: productId }),
-        },
-      );
-      
+      const res = await wishlistService.toggle(productId);
+
       if (res.status === "added") {
         setWishlistIds((prev) => [...prev, productId]);
       } else {
         setWishlistIds((prev) => prev.filter((id) => id !== productId));
       }
     } catch (err) {
-      logger.error("Failed to toggle wishlist", err, { component: "WishlistContext", productId });
+      logger.error("Failed to toggle wishlist", err, {
+        component: "WishlistContext",
+        productId,
+      });
     }
   };
 
@@ -73,6 +75,7 @@ export const WishlistProvider = ({ children }: { children: React.ReactNode }) =>
 
 export const useWishlist = () => {
   const context = useContext(WishlistContext);
-  if (!context) throw new Error("useWishlist must be used within WishlistProvider");
+  if (!context)
+    throw new Error("useWishlist must be used within WishlistProvider");
   return context;
 };

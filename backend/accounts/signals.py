@@ -1,9 +1,12 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from allauth.socialaccount.signals import social_account_added
+import logging
 import requests
 from django.core.files.base import ContentFile
 from .models import CustomerProfile, SellerProfile, User
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=User)
@@ -39,4 +42,4 @@ def save_social_avatar(request, socialaccount, **kwargs):
                     file_name = f"avatar_{user.id}.jpg"
                     profile.avatar.save(file_name, ContentFile(response.content), save=True)
             except Exception as e:
-                print(f"Error fetching social avatar: {e}")
+                logger.exception("Error fetching social avatar: %s", e)

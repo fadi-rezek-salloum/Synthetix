@@ -30,7 +30,9 @@ class WishlistViewSet(viewsets.ModelViewSet):
     serializer_class = WishlistSerializer
 
     def get_queryset(self):
-        return Wishlist.objects.filter(user=self.request.user)
+        return Wishlist.objects.filter(user=self.request.user).prefetch_related(
+            "products__images", "products__variants"
+        )
 
     def get_object(self):
         obj, _ = Wishlist.objects.get_or_create(user=self.request.user)

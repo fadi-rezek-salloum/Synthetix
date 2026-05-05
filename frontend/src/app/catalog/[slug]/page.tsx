@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Product } from "@/types";
+import { Product, ProductVariant } from "@/types";
 import { productService } from "@/services/productService";
+import { useCart } from "@/context/CartContext";
+import NotificationService from "@/lib/notificationService";
 import { Sparkles } from "lucide-react";
 import ProductGallery from "@/components/ui/ProductGallery";
 
@@ -12,12 +14,19 @@ const ProductPage = () => {
   const { slug } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const { addToCart } = useCart();
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
 
   useEffect(() => {
     if (slug) {
       productService
         .getProductBySlug(slug as string)
-        .then(setProduct)
+        .then((data) => {
+          setProduct(data);
+          if (data.variants && data.variants.length > 0) {
+            setSelectedVariant(data.variants[0]);
+          }
+        })
         .finally(() => setLoading(false));
     }
   }, [slug]);
@@ -78,8 +87,45 @@ const ProductPage = () => {
               </div>
             </div>
 
-            <button className="w-full py-5 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition-all mb-4">
-              Add to Identity Collection
+            {/* Variant Selector */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="mb-10">
+                <h3 className="text-zinc-400 text-sm font-bold uppercase tracking-widest mb-4">Select Variant</h3>
+                <div className="flex flex-wrap gap-3">
+                  {product.variants.map((variant) => (
+                    <button
+                      key={variant.id}
+                      onClick={() => setSelectedVariant(variant)}
+                      disabled={variant.stock <= 0}
+                      className={`px-6 py-3 rounded-full text-sm font-bold uppercase tracking-widest border transition-all ${
+                        selectedVariant?.id === variant.id
+                          ? "bg-white text-black border-white"
+                          : "bg-transparent text-zinc-400 border-white/20 hover:border-white/50"
+                      } ${variant.stock <= 0 ? "opacity-30 cursor-not-allowed" : ""}`}
+                    >
+                      {variant.size} / {variant.color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button 
+              onClick={() => {
+                if (!selectedVariant) {
+                  NotificationService.error("Please select a variant.");
+                  return;
+                }
+                if (selectedVariant.stock <= 0) {
+                  NotificationService.error("This variant is out of stock.");
+                  return;
+                }
+                addToCart(selectedVariant.id, 1);
+              }}
+              disabled={!selectedVariant || selectedVariant.stock <= 0}
+              className="w-full py-5 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {selectedVariant?.stock === 0 ? "Out of Stock" : "Add to Identity Collection"}
             </button>
           </motion.div>
         </div>

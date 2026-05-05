@@ -14,7 +14,7 @@ export const productService = {
   } = {}): Promise<PaginatedResponse<Product>> => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.set("page", params.page.toString());
-    if (params.category) queryParams.set("category__slug", params.category);
+    if (params.category) queryParams.set("category", params.category);
     if (params.brand) queryParams.set("brand", params.brand);
     if (params.gender) queryParams.set("gender", params.gender);
     if (params.is_featured !== undefined)
@@ -39,3 +39,4 @@ export const productService = {
     return response.brands || [];
   },
 };
+

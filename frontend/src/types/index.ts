@@ -59,7 +59,7 @@ export interface Address {
   id: number;
   street_address: string;
   city: string;
-  state: string;
+  state_province: string;
   postal_code: string;
   country: string;
   is_default: boolean;
@@ -123,3 +123,4 @@ export interface RegisterCredentials {
   store_name?: string;
   role: "CUSTOMER" | "SELLER";
 }
+

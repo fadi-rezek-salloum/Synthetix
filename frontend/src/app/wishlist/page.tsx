@@ -5,7 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
 import { Product } from "@/types";
-import { apiFetch } from "@/lib/api";
+import { wishlistService } from "@/services/wishlistService";
 import { logger } from "@/lib/logger";
 import ProductCard from "@/components/ui/ProductCard";
 import { Heart, ArrowRight } from "lucide-react";
@@ -19,9 +19,9 @@ export default function WishlistPage() {
 
   useEffect(() => {
     if (user) {
-      apiFetch<{ results?: { products?: Product[] }[] }>("/catalog/wishlist/")
+      wishlistService.getWishlist()
         .then((data) => {
-          setProducts(data.results?.[0]?.products || []);
+          setProducts(data);
         })
         .catch((err) => logger.error("Failed to load wishlist", err, { component: "WishlistPage" }))
         .finally(() => setLoading(false));

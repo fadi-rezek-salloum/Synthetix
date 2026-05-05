@@ -12,11 +12,18 @@ const ProductGrid = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    productService
-      .getProducts()
-      .then((data) => setProducts(data.results))
-      .catch((err) => logger.error("Failed to load products", err, { component: "ProductGrid" }))
-      .finally(() => setLoading(false));
+    const loadProducts = async () => {
+      try {
+        const data = await productService.getProducts();
+        setProducts(data.results);
+      } catch (err) {
+        logger.error("Failed to load products", err, { component: "ProductGrid" });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProducts();
   }, []);
 
   if (loading)

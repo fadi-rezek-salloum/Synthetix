@@ -11,10 +11,16 @@ class CartViewSet(viewsets.ModelViewSet):
     serializer_class = CartSerializer
 
     def get_queryset(self):
-        return Cart.objects.filter(user=self.request.user)
+        return Cart.objects.filter(user=self.request.user).prefetch_related(
+            "items__variant__product__images",
+            "items__variant__product__variants"
+        )
 
     def get_object(self):
-        obj, _ = Cart.objects.get_or_create(user=self.request.user)
+        obj, _ = Cart.objects.prefetch_related(
+            "items__variant__product__images",
+            "items__variant__product__variants"
+        ).get_or_create(user=self.request.user)
         return obj
 
     @action(detail=False, methods=['post'])
@@ -94,13 +100,44 @@ class CartViewSet(viewsets.ModelViewSet):
         except CartItem.DoesNotExist:
             return Response({"error": "Item not found in your cart"}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=False, methods=['post'])
+    def update_quantity(self, request):
+        item_id = request.data.get('item_id')
+        try:
+            quantity = int(request.data.get('quantity', 1))
+        except (ValueError, TypeError):
+            return Response({"error": "quantity must be a valid integer"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not item_id:
+            return Response({"error": "item_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if quantity < 1 or quantity > 999:
+            return Response({"error": "quantity must be between 1 and 999"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            cart = self.get_object()
+            item = CartItem.objects.select_related(
+                "variant"
+            ).get(id=item_id, cart=cart)
+            if quantity > item.variant.stock:
+                return Response(
+                    {"error": f"Only {item.variant.stock} item(s) available", "available": item.variant.stock},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            item.quantity = quantity
+            item.save()
+            return Response(CartSerializer(cart).data)
+        except CartItem.DoesNotExist:
+            return Response({"error": "Item not found in your cart"}, status=status.HTTP_404_NOT_FOUND)
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = OrderSerializer
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        return Order.objects.filter(user=self.request.user).prefetch_related(
+            "items__product__images"
+        )
 
     @action(detail=False, methods=['post'])
     def checkout(self, request):

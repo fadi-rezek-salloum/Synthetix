@@ -8,6 +8,7 @@ import { Product } from "@/types";
 import { cn } from "@/lib/utils";
 import { useWishlist } from "@/context/WishlistContext";
 import { useAuth } from "@/context/AuthContext";
+import NotificationService from "@/lib/notificationService";
 
 interface ProductCardProps {
   product: Product;
@@ -24,7 +25,7 @@ const ProductCard = ({ product, priority = false }: ProductCardProps) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      // Redirect to login or show toast?
+      NotificationService.info("Please log in to save items to your wishlist.");
       return;
     }
     toggleWishlist(product.id);

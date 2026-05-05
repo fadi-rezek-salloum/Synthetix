@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import { apiFetch } from "@/lib/api";
+import { wishlistService } from "@/services/wishlistService";
+import { orderService } from "@/services/orderService";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 import { User, Mail, Package, Heart, MapPin, CreditCard } from "lucide-react";
@@ -30,13 +31,13 @@ export default function ProfilePage() {
       const fetchStats = async () => {
         try {
           const [wishlistRes, ordersRes] = await Promise.all([
-            apiFetch<{ results?: { products?: Product[] }[] }>("/catalog/wishlist/"),
-            apiFetch<{ count?: number; results?: Order[] }>("/orders/orders/"),
+            wishlistService.getWishlist(),
+            orderService.getOrders(),
           ]);
           
           setStats({
             orders: ordersRes.count || 0,
-            wishlist: wishlistRes.results?.[0]?.products?.length || 0,
+            wishlist: wishlistRes.length || 0,
             addresses: user.addresses?.length || 0,
             payments: 0 // Placeholder for now
           });

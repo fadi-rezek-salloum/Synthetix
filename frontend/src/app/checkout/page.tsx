@@ -6,8 +6,9 @@ import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 import { Lock, CreditCard, CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { apiFetch } from "@/lib/api";
+import { orderService } from "@/services/orderService";
 import { logger } from "@/lib/logger";
+import NotificationService from "@/lib/notificationService";
 import { cn } from "@/lib/utils";
 
 export default function CheckoutPage() {
@@ -26,13 +27,12 @@ export default function CheckoutPage() {
   const handleCheckout = async () => {
     setIsProcessing(true);
     try {
-      await apiFetch("/orders/orders/checkout/", {
-        method: "POST",
-        body: JSON.stringify({ shipping_address: shippingAddress }),
-      });
+      await orderService.checkout(shippingAddress);
       setStep(3); // Success step
-    } catch (err) {
+    } catch (err: unknown) {
+      const msg = (err as Record<string, string>)?.error || "Checkout failed. Please try again.";
       logger.error("Checkout failed", err, { component: "CheckoutPage" });
+      NotificationService.error(msg);
     } finally {
       setIsProcessing(false);
     }

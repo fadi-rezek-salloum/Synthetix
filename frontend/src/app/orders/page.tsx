@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import { Order, PaginatedResponse } from "@/types";
-import { apiFetch } from "@/lib/api";
+import { Order } from "@/types";
+import { orderService } from "@/services/orderService";
 import { logger } from "@/lib/logger";
 import { Package, Clock, CheckCircle2, Truck, XCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -17,10 +17,9 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (user) {
-      apiFetch<PaginatedResponse<Order>>("/orders/orders/")
-        .then((data) => {
-          setOrders(data.results || []);
-        })
+      orderService
+        .getOrders()
+        .then((data) => setOrders(data.results || []))
         .catch((err) => logger.error("Failed to load orders", err, { component: "OrdersPage" }))
         .finally(() => setLoading(false));
     }

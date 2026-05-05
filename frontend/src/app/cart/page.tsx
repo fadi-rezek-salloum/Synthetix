@@ -8,7 +8,7 @@ import { ShoppingBag, Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function CartPage() {
-  const { cart, addToCart, removeFromCart, loading } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, loading } = useCart();
   const router = useRouter();
 
   if (loading) {
@@ -92,7 +92,7 @@ export default function CartPage() {
                     <div className="flex items-center justify-between mt-6">
                       <div className="flex items-center gap-4 bg-black/40 border border-white/5 rounded-full p-1">
                         <button 
-                          onClick={() => addToCart(item.variant.id, -1)}
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           disabled={item.quantity <= 1}
                           className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-20"
                         >
@@ -100,7 +100,7 @@ export default function CartPage() {
                         </button>
                         <span className="text-sm font-black text-white w-4 text-center">{item.quantity}</span>
                         <button 
-                          onClick={() => addToCart(item.variant.id, 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white transition-colors"
                         >
                           <Plus className="w-3 h-3" />

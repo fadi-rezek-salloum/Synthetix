@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Cart } from "@/types";
-import { apiFetch } from "@/lib/api";
+import { cartService } from "@/services/cartService";
 import { logger } from "@/lib/logger";
 import NotificationService from "@/lib/notificationService";
 import { useAuth } from "./AuthContext";
@@ -11,6 +11,7 @@ interface CartContextType {
   cart: Cart | null;
   addToCart: (variantId: number, quantity?: number) => Promise<void>;
   removeFromCart: (itemId: number) => Promise<void>;
+  updateQuantity: (itemId: number, quantity: number) => Promise<void>;
   loading: boolean;
 }
 
@@ -24,9 +25,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchCart = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await apiFetch<Cart | { results?: Cart[] }>("/orders/cart/");
-      const paginatedCart = data as { results?: Cart[] };
-      setCart(Array.isArray(paginatedCart.results) ? paginatedCart.results[0] || null : data as Cart);
+      const data = await cartService.getCart();
+      setCart(data);
     } catch (err) {
       logger.error("Failed to fetch cart", err, { component: "CartContext" });
     }
@@ -49,14 +49,11 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const addToCart = async (variantId: number, quantity: number = 1) => {
     if (!user) return;
     try {
-      const updatedCart = await apiFetch<Cart>("/orders/cart/add_item/", {
-        method: "POST",
-        body: JSON.stringify({ variant_id: variantId, quantity }),
-      });
+      const updatedCart = await cartService.addItem(variantId, quantity);
       setCart(updatedCart);
       NotificationService.success("Item added to cart");
-    } catch (err: any) {
-      const errorMsg = err?.error || "Failed to add item to cart";
+    } catch (err: unknown) {
+      const errorMsg = (err as Record<string, string>)?.error || "Failed to add item to cart";
       logger.error("Failed to add to cart", err, { component: "CartContext", variantId, quantity });
       NotificationService.error(errorMsg);
     }
@@ -65,13 +62,8 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const removeFromCart = async (itemId: number) => {
     if (!user) return;
     try {
-      // Assuming a standard delete on CartItem endpoint
-      // For now, let's just refetch or implement a specific cart-remove action
-      await apiFetch(`/orders/cart/remove_item/`, {
-        method: "POST",
-        body: JSON.stringify({ item_id: itemId }),
-      });
-      await fetchCart();
+      const updatedCart = await cartService.removeItem(itemId);
+      setCart(updatedCart);
       NotificationService.success("Item removed from cart");
     } catch (err) {
       logger.error("Failed to remove from cart", err, { component: "CartContext", itemId });
@@ -79,8 +71,20 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateQuantity = async (itemId: number, quantity: number) => {
+    if (!user) return;
+    try {
+      const updatedCart = await cartService.updateQuantity(itemId, quantity);
+      setCart(updatedCart);
+    } catch (err: unknown) {
+      const errorMsg = (err as Record<string, string>)?.error || "Failed to update quantity";
+      logger.error("Failed to update quantity", err, { component: "CartContext", itemId, quantity });
+      NotificationService.error(errorMsg);
+    }
+  };
+
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, loading }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, loading }}>
       {children}
     </CartContext.Provider>
   );

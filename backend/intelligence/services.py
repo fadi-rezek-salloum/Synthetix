@@ -1,9 +1,12 @@
 import json
+import logging
 import os
 
 import PIL.Image
 from google import genai
 from google.genai import types
+
+logger = logging.getLogger(__name__)
 
 
 class AIService:
@@ -50,5 +53,27 @@ class AIService:
 
             return json.loads(response.text)
         except Exception as e:
-            print(f"Elite AI Error: {e}")
+            logger.exception("AI fashion meta generation failed: %s", e)
             return None
+
+    def get_chatbot_reply(self, user_message: str, inventory_context: str) -> str:
+        """Generate a response from the 'Loom' fashion concierge."""
+        prompt = f"""
+        You are 'Loom', the luxury fashion concierge for Synthetix.
+        Be polite, concise, and stylish. Use sensory language.
+        
+        Here is our current inventory:
+        {inventory_context}
+
+        The customer says: "{user_message}"
+        
+        How do you respond? If they ask for something we don't have, politely suggest the closest alternative.
+        """
+        try:
+            response = self.client.models.generate_content(
+                model="gemini-1.5-flash", contents=prompt
+            )
+            return response.text
+        except Exception as e:
+            logger.exception("Chatbot reply failed: %s", e)
+            return "I apologize, but I am experiencing a brief neural disconnect. How else may I assist you with your aesthetic journey?"

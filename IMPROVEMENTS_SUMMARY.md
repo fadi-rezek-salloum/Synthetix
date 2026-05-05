@@ -358,5 +358,21 @@ The application is now ready for:
 
 ---
 
-**Last Updated**: May 4, 2026
-**Version**: 2.0 (Production Ready)
+**Last Updated**: May 5, 2026
+**Version**: 2.1 (Architectural Alignment)
+
+---
+
+### v2.1 Improvements (May 5, 2026)
+
+#### 1. **Architectural Alignment (AGENTS.md)** ✅
+- **Service Layer (Frontend)**: Created `cartService.ts`, `wishlistService.ts`, and `intelligenceService.ts`. Refactored `CartContext` and `WishlistContext` to eliminate direct `apiFetch` calls.
+- **Service Layer (Backend)**: Refactored `BuyerChatbotView` to use `AIService` instead of direct `genai` client instantiation.
+- **Golden Rule #8 (Optimized Queries)**: Added `select_related` and `prefetch_related` to `CartViewSet`, `OrderViewSet`, and `WishlistViewSet` to fix newly identified N+1 query issues.
+
+#### 2. **UI/UX & SEO Polish** ✅
+- **Homepage Enhancement**: Added SEO metadata, feature highlights, and a high-conversion newsletter CTA section.
+- **Consistent Error Handling**: Refactored `ProductGrid` to follow the project's async/await and try/catch standards with `logger` and `notificationService`.
+
+#### 3. **Type Integrity** ✅
+- Verified that all frontend types (User Roles, Order Status) exactly match the backend `TextChoices` as per project constitutional requirements.

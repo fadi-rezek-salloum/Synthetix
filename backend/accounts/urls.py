@@ -2,7 +2,7 @@ from dj_rest_auth.registration.views import ConfirmEmailView, VerifyEmailView
 from django.conf import settings
 from django.urls import include, path
 from django.views.generic import RedirectView
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 
 from .views import (
     AccountDeleteView,
@@ -15,7 +15,7 @@ from .views import (
     SellerProfileView,
 )
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register(r"addresses", AddressViewSet, basename="address")
 
 urlpatterns = [

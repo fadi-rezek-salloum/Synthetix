@@ -28,22 +28,10 @@ class BuyerChatbotView(APIView):
             ]
         )
 
-        prompt = f"""
-        You are 'Loom', the luxury fashion concierge for Synthetix.
-        Be polite, concise, and stylish. Use sensory language.
-        
-        Here is our current inventory:
-        {inventory_context}
-
-        The customer says: "{user_message}"
-        
-        How do you respond? If they ask for something we don't have, politely suggest the closest alternative.
-        """
-
         try:
-            client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-            response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
-            return Response({"reply": response.text})
+            ai_service = AIService()
+            reply = ai_service.get_chatbot_reply(user_message, inventory_context)
+            return Response({"reply": reply})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
