@@ -9,6 +9,13 @@ import { InputField } from "@/components/ui/Input";
 import { PhoneInputField } from "@/components/ui/PhoneInput";
 import { toApiError } from "@/lib/api";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import { User } from "@/types";
+
+type GoogleUserData = {
+  email: string;
+  first_name: string;
+  last_name: string;
+};
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -39,48 +46,13 @@ export const SocialAuth = () => {
   // Multi-step social registration state
   const [showCompletionForm, setShowCompletionForm] = useState(false);
   const [tempGoogleToken, setTempGoogleToken] = useState<string | null>(null);
-  const [googleUserData, setGoogleUserData] = useState<{email: string, first_name: string, last_name: string} | null>(null);
+  const [googleUserData, setGoogleUserData] = useState<GoogleUserData | null>(null);
   const [completionData, setCompletionData] = useState({
     phone_number: "",
     password: "",
   });
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = tokenResponse.access_token;
-        
-        // 1. Check if user exists
-        const checkRes = await authService.socialCheck("google", token);
-        
-        if (checkRes.exists) {
-          // 2a. User exists, just log in
-          const data = await authService.socialLogin("google", token);
-          login(data);
-        } else {
-          // 2b. New user, show the completion form
-          setTempGoogleToken(token);
-          setGoogleUserData({
-            email: checkRes.email,
-            first_name: checkRes.first_name,
-            last_name: checkRes.last_name
-          });
-          setShowCompletionForm(true);
-        }
-      } catch (err: unknown) {
-        logger.error("Social Auth failed", err, { component: "SocialAuth", provider: "google" });
-        setError("Failed to authenticate with Google. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    onError: (errorResponse) => {
-      logger.error("Google Login failed", new Error(JSON.stringify(errorResponse)), { component: "SocialAuth" });
-      setError("Google Login was cancelled or failed.");
-    },
-  });
+  const hasGoogleConfig = !!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
   const handleCompletionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,22 +109,37 @@ export const SocialAuth = () => {
 
       {error && !showCompletionForm && (
         <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs text-center mb-4">
-          {error}
+          {typeof error === 'string' ? error : JSON.stringify(error)}
+        </div>
+      )}
+
+      {!hasGoogleConfig && (
+        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400 text-[10px] text-center mb-4 font-mono">
+          Google Authentication is not configured.
         </div>
       )}
 
       <div className="flex flex-col gap-4">
-        <button
-          type="button"
-          onClick={() => googleLogin()}
-          disabled={loading}
-          className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-sm font-bold group disabled:opacity-50"
-        >
-          <GoogleIcon />
-          <span className="text-zinc-400 group-hover:text-white transition-colors">
-            {loading ? "Authenticating..." : "Continue with Google"}
-          </span>
-        </button>
+        {hasGoogleConfig ? (
+          <GoogleLoginButton 
+            setLoading={setLoading}
+            setError={setError}
+            login={login}
+            setTempGoogleToken={setTempGoogleToken}
+            setGoogleUserData={setGoogleUserData}
+            setShowCompletionForm={setShowCompletionForm}
+            loading={loading}
+          />
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/10 rounded-2xl opacity-50 cursor-not-allowed text-sm font-bold"
+          >
+            <GoogleIcon />
+            <span className="text-zinc-500">Google Login Unavailable</span>
+          </button>
+        )}
       </div>
 
       <AnimatePresence>
@@ -222,5 +209,76 @@ export const SocialAuth = () => {
         )}
       </AnimatePresence>
     </div>
+  );
+};
+
+interface GoogleLoginButtonProps {
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  login: (data: { user: User }) => void;
+  setTempGoogleToken: (token: string | null) => void;
+  setGoogleUserData: (data: GoogleUserData | null) => void;
+  setShowCompletionForm: (show: boolean) => void;
+  loading: boolean;
+}
+
+const GoogleLoginButton = ({
+  setLoading,
+  setError,
+  login,
+  setTempGoogleToken,
+  setGoogleUserData,
+  setShowCompletionForm,
+  loading
+}: GoogleLoginButtonProps) => {
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = tokenResponse.access_token;
+        const checkRes = await authService.socialCheck("google", token);
+
+        if (checkRes.exists) {
+          const data = await authService.socialLogin("google", token);
+          login(data);
+        } else {
+          setTempGoogleToken(token);
+          setGoogleUserData({
+            email: checkRes.email,
+            first_name: checkRes.first_name,
+            last_name: checkRes.last_name
+          });
+          setShowCompletionForm(true);
+        }
+      } catch (err: unknown) {
+        logger.error("Social Auth failed", err, { component: "SocialAuth", provider: "google" });
+        setError("Failed to authenticate with Google. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: (errorResponse) => {
+      logger.error("Google Login failed", new Error(JSON.stringify(errorResponse)), { component: "SocialAuth" });
+      setError("Google Login was cancelled or failed.");
+    },
+    onNonOAuthError: (errorResponse) => {
+      logger.error("Google non-OAuth login failed", new Error(JSON.stringify(errorResponse)), { component: "SocialAuth" });
+      setError("Google Login was cancelled or failed.");
+    },
+  });
+
+  return (
+    <button
+      type="button"
+      onClick={() => googleLogin()}
+      disabled={loading}
+      className="flex items-center justify-center gap-3 py-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-sm font-bold group disabled:opacity-50 w-full"
+    >
+      <GoogleIcon />
+      <span className="text-zinc-400 group-hover:text-white transition-colors">
+        {loading ? "Authenticating..." : "Continue with Google"}
+      </span>
+    </button>
   );
 };

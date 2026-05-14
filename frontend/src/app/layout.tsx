@@ -39,9 +39,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ErrorBoundary>
-          <GoogleOAuthProvider
-            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
-          >
+          <SafeGoogleProvider>
             <AuthProvider>
               <WishlistProvider>
                 <CartProvider>
@@ -54,9 +52,32 @@ export default function RootLayout({
                 </CartProvider>
               </WishlistProvider>
             </AuthProvider>
-          </GoogleOAuthProvider>
+          </SafeGoogleProvider>
         </ErrorBoundary>
       </body>
     </html>
+  );
+}
+
+function SafeGoogleProvider({ children }: { children: React.ReactNode }) {
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  if (!clientId) {
+    return (
+      <>
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-red-500 text-white text-[10px] py-1 px-4 text-center sticky top-0 z-[9999] font-mono">
+            CRITICAL: NEXT_PUBLIC_GOOGLE_CLIENT_ID is missing from environment. Social login will fail.
+          </div>
+        )}
+        {children}
+      </>
+    );
+  }
+
+  return (
+    <GoogleOAuthProvider clientId={clientId}>
+      {children}
+    </GoogleOAuthProvider>
   );
 }

@@ -34,6 +34,10 @@ const getColorClasses = (type: NotificationType) => {
 export const ToastContainer = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
   useEffect(() => {
     const unsubscribe = NotificationService.subscribe((notification) => {
       setNotifications(prev => [...prev, notification]);
@@ -50,10 +54,6 @@ export const ToastContainer = () => {
 
     return unsubscribe;
   }, []);
-
-  const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
 
   return (
     <div className="fixed top-6 right-6 z-50 pointer-events-none">

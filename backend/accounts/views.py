@@ -12,6 +12,8 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 import phonenumbers
 import requests
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Address, CustomerProfile, SellerProfile
 from .permissions import IsCustomer, IsSeller
@@ -22,8 +24,35 @@ User = get_user_model()
 
 
 class SafeTokenRefreshView(get_refresh_view()):
+    """Token refresh that properly handles deleted users"""
+    
     def post(self, request, *args, **kwargs):
         try:
+            # Try to get refresh token from request
+            refresh_token_str = None
+            if 'refresh' in request.data:
+                refresh_token_str = request.data.get('refresh')
+            elif hasattr(request, 'COOKIES') and 'synthetix-refresh' in request.COOKIES:
+                refresh_token_str = request.COOKIES.get('synthetix-refresh')
+            
+            if refresh_token_str:
+                try:
+                    refresh_token = RefreshToken(refresh_token_str)
+                    # Check if user still exists
+                    user_id = refresh_token.get('user_id')
+                    if user_id:
+                        User.objects.get(id=user_id)
+                except User.DoesNotExist:
+                    response = Response(
+                        {"detail": "User not found", "code": "user_not_found"},
+                        status=status.HTTP_401_UNAUTHORIZED,
+                    )
+                    unset_jwt_cookies(response)
+                    return response
+                except (InvalidToken, TokenError, ValueError, TypeError):
+                    # Invalid token, let the parent handle it
+                    pass
+            
             return super().post(request, *args, **kwargs)
         except User.DoesNotExist:
             response = Response(
@@ -75,18 +104,46 @@ class GoogleSocialCheckView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
     
     def post(self, request):
-        token = request.data.get('access_token')
+        token = request.data.get('access_token') or request.data.get('credential')
         if not token:
             return Response({"error": "No token provided"}, status=status.HTTP_400_BAD_REQUEST)
         
         return GoogleAuthService.get_check_response(token)
 
 
+class GoogleCredentialLoginView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        token = request.data.get('credential') or request.data.get('access_token')
+        if not token:
+            return Response({"error": "No token provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        google_data = GoogleAuthService.verify_google_token(token)
+        if not google_data:
+            return Response({"error": "Invalid Google token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        email = google_data.get("email")
+        if not email:
+            return Response(
+                {"error": "Could not retrieve email from Google"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not User.objects.filter(email=email).exists():
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        result = GoogleAuthService.login_existing_google_user(email)
+        response = Response(result, status=status.HTTP_200_OK)
+        set_jwt_cookies(response, result["access"], result["refresh"])
+        return response
+
+
 class GoogleSocialRegisterView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
     
     def post(self, request):
-        token = request.data.get('access_token')
+        token = request.data.get('access_token') or request.data.get('credential')
         password = request.data.get('password')
         phone_number = request.data.get('phone_number')
         
@@ -148,6 +205,8 @@ class AccountDeleteView(generics.DestroyAPIView):
         instance.delete()
 
     def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.delete()
         response = Response(
             {"detail": "Your account has been permanently deleted."},
             status=status.HTTP_200_OK,

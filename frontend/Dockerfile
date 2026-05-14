@@ -12,6 +12,14 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Define build arguments
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
+# Make args available to Next.js build
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
 # Build Next.js application
 RUN npm run build
 

@@ -2,64 +2,120 @@
   width: 100%;
 }
 
+.phone-input-wrapper.PhoneInput,
 .phone-input-wrapper .PhoneInput {
   display: flex;
   align-items: center;
   width: 100%;
+  height: 54px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1rem;
   padding: 0;
-  transition: all 0.2s;
+  overflow: hidden;
+  transition: border-color 0.2s, background-color 0.2s;
 }
 
+.phone-input-wrapper.PhoneInput:focus-within,
 .phone-input-wrapper .PhoneInput:focus-within {
   border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
 }
 
+.phone-input-wrapper.has-error.PhoneInput,
 .phone-input-wrapper.has-error .PhoneInput {
   border-color: rgba(239, 68, 68, 0.5);
   background: rgba(239, 68, 68, 0.05);
 }
 
+.phone-input-wrapper.has-error.PhoneInput:focus-within,
 .phone-input-wrapper.has-error .PhoneInput:focus-within {
   border-color: rgba(239, 68, 68, 0.8);
 }
 
+.phone-input-wrapper .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  height: 100%;
+  min-width: 78px;
+  padding: 0 0.875rem 0 1rem;
+  margin-right: 0.875rem;
+  position: relative;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.03);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .phone-input-wrapper .PhoneInputCountrySelect {
-  background: transparent;
-  border: none;
-  color: white;
-  padding: 1rem 0.5rem 1rem 1rem;
-  font-size: 0.875rem;
-  outline: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+  border: 0;
+  background: #ffffff;
+  color: #111827;
+  opacity: 0;
   cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.phone-input-wrapper .PhoneInputCountrySelect option {
+  background: #ffffff;
+  color: #111827;
 }
 
 .phone-input-wrapper .PhoneInputCountryIcon {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.375rem;
+  height: 1.375rem;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-input-wrapper .PhoneInputCountryIconImg {
+  border-radius: 0.1875rem;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .phone-input-wrapper .PhoneInputCountrySelectArrow {
-  color: rgba(255, 255, 255, 0.5);
-  margin-left: 0.25rem;
+  display: block;
+  content: '';
+  width: 0.3rem;
+  height: 0.3rem;
+  margin-left: 0;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.5);
+  border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+  opacity: 0.7;
 }
 
-.phone-input-wrapper .PhoneInputCountrySelect:focus {
-  outline: none;
+.phone-input-wrapper .PhoneInputCountrySelect:focus + .PhoneInputCountryIcon + .PhoneInputCountrySelectArrow {
+  opacity: 1;
+  color: white;
 }
 
 .phone-input-wrapper .PhoneInputInput {
   flex: 1;
+  height: 100%;
   background: transparent;
   border: none;
   color: white;
-  padding: 1rem 1rem 1rem 0.5rem;
+  padding: 0 1rem 0 0;
   font-size: 0.875rem;
+  line-height: 1.25rem;
   outline: none;
   min-width: 0;
+  font-family: inherit;
 }
 
 .phone-input-wrapper .PhoneInputInput::placeholder {
@@ -69,4 +125,14 @@
 .phone-input-wrapper .PhoneInputInput:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Remove default browser autofill styling which can cause weird backgrounds */
+.phone-input-wrapper .PhoneInputInput:-webkit-autofill,
+.phone-input-wrapper .PhoneInputInput:-webkit-autofill:hover, 
+.phone-input-wrapper .PhoneInputInput:-webkit-autofill:focus, 
+.phone-input-wrapper .PhoneInputInput:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px #1a1a1a inset !important;
+    -webkit-text-fill-color: white !important;
+    transition: background-color 5000s ease-in-out 0s;
 }

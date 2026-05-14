@@ -4,14 +4,22 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { Shield, Key, AlertTriangle, X, Eye, EyeOff, Check } from "lucide-react";
+import {
+  Shield,
+  Key,
+  AlertTriangle,
+  X,
+  Eye,
+  EyeOff,
+  Check,
+} from "lucide-react";
 import { authService } from "@/services/authService";
 import { toApiError } from "@/lib/api";
 import { PhoneInputField } from "@/components/ui/PhoneInput";
 import { isValidPhoneNumber } from "libphonenumber-js";
 
 export default function SettingsPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, logoutLocal } = useAuth();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -33,7 +41,9 @@ export default function SettingsPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-  const [passwordErrors, setPasswordErrors] = useState<Record<string, string[]>>({});
+  const [passwordErrors, setPasswordErrors] = useState<
+    Record<string, string[]>
+  >({});
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -48,6 +58,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfileData({
         first_name: user.first_name || "",
         last_name: user.last_name || "",
@@ -72,7 +83,10 @@ export default function SettingsPage() {
     setErrors({});
     setSuccess(null);
 
-    if (profileData.phone_number && !isValidPhoneNumber(profileData.phone_number)) {
+    if (
+      profileData.phone_number &&
+      !isValidPhoneNumber(profileData.phone_number)
+    ) {
       setErrors({ phone_number: ["Please enter a valid phone number"] });
       setSaving(false);
       return;
@@ -108,7 +122,11 @@ export default function SettingsPage() {
     try {
       await authService.changePassword(passwordData);
       setPasswordSuccess(true);
-      setPasswordData({ old_password: "", new_password1: "", new_password2: "" });
+      setPasswordData({
+        old_password: "",
+        new_password1: "",
+        new_password2: "",
+      });
       setTimeout(() => {
         setShowPasswordModal(false);
         setPasswordSuccess(false);
@@ -117,7 +135,9 @@ export default function SettingsPage() {
       if (err && typeof err === "object") {
         setPasswordErrors(toApiError(err) as Record<string, string[]>);
       } else {
-        setPasswordErrors({ non_field_errors: ["An unexpected error occurred."] });
+        setPasswordErrors({
+          non_field_errors: ["An unexpected error occurred."],
+        });
       }
     } finally {
       setPasswordLoading(false);
@@ -131,13 +151,7 @@ export default function SettingsPage() {
 
     try {
       await authService.deleteAccount();
-      try {
-        await authService.logout();
-      } catch {
-        // Ignore logout errors after deletion
-      }
-      localStorage.setItem("synthetix_auth_sync", Date.now().toString());
-      router.push("/");
+      logoutLocal("/auth/login");
     } catch (err: unknown) {
       if (err && typeof err === "object" && "detail" in err) {
         setDeleteError((err as { detail: string }).detail);
@@ -177,7 +191,9 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white">Profile</h2>
-                <p className="text-sm text-zinc-500">Your personal information</p>
+                <p className="text-sm text-zinc-500">
+                  Your personal information
+                </p>
               </div>
             </div>
 
@@ -191,33 +207,53 @@ export default function SettingsPage() {
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">First Name</label>
+                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">
+                    First Name
+                  </label>
                   <input
                     type="text"
                     value={profileData.first_name}
-                    onChange={(e) => setProfileData({ ...profileData, first_name: e.target.value })}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        first_name: e.target.value,
+                      })
+                    }
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-white/20 transition-colors"
                   />
                   {errors.first_name && (
-                    <p className="text-[10px] text-red-400 mt-1">{errors.first_name[0]}</p>
+                    <p className="text-[10px] text-red-400 mt-1">
+                      {errors.first_name[0]}
+                    </p>
                   )}
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Last Name</label>
+                  <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">
+                    Last Name
+                  </label>
                   <input
                     type="text"
                     value={profileData.last_name}
-                    onChange={(e) => setProfileData({ ...profileData, last_name: e.target.value })}
+                    onChange={(e) =>
+                      setProfileData({
+                        ...profileData,
+                        last_name: e.target.value,
+                      })
+                    }
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-white/20 transition-colors"
                   />
                   {errors.last_name && (
-                    <p className="text-[10px] text-red-400 mt-1">{errors.last_name[0]}</p>
+                    <p className="text-[10px] text-red-400 mt-1">
+                      {errors.last_name[0]}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Email</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">
+                  Email
+                </label>
                 <input
                   type="email"
                   value={user.email}
@@ -227,10 +263,14 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Phone Number</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">
+                  Phone Number
+                </label>
                 <PhoneInputField
                   value={profileData.phone_number}
-                  onChange={(value) => setProfileData({ ...profileData, phone_number: value })}
+                  onChange={(value) =>
+                    setProfileData({ ...profileData, phone_number: value })
+                  }
                   error={errors.phone_number}
                   placeholder="Phone Number"
                 />
@@ -262,7 +302,9 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white">Password</h2>
-                <p className="text-sm text-zinc-500">Change your account password</p>
+                <p className="text-sm text-zinc-500">
+                  Change your account password
+                </p>
               </div>
             </div>
 
@@ -271,7 +313,11 @@ export default function SettingsPage() {
                 setShowPasswordModal(true);
                 setPasswordErrors({});
                 setPasswordSuccess(false);
-                setPasswordData({ old_password: "", new_password1: "", new_password2: "" });
+                setPasswordData({
+                  old_password: "",
+                  new_password1: "",
+                  new_password2: "",
+                });
               }}
               className="px-6 py-3 bg-white/10 text-white text-sm font-bold rounded-xl hover:bg-white/20 transition-colors"
             >
@@ -286,14 +332,20 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-red-400">Danger Zone</h2>
-                <p className="text-sm text-zinc-500">Irreversible and destructive actions</p>
+                <p className="text-sm text-zinc-500">
+                  Irreversible and destructive actions
+                </p>
               </div>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-red-500/5 rounded-2xl border border-red-500/10">
               <div>
-                <div className="text-sm font-bold text-red-400">Delete Account</div>
-                <div className="text-xs text-zinc-500 mt-1">Permanently delete your account and all data</div>
+                <div className="text-sm font-bold text-red-400">
+                  Delete Account
+                </div>
+                <div className="text-xs text-zinc-500 mt-1">
+                  Permanently delete your account and all data
+                </div>
               </div>
               <button
                 onClick={() => {
@@ -336,21 +388,36 @@ export default function SettingsPage() {
                   <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Check className="w-8 h-8 text-green-400" />
                   </div>
-                  <h2 className="text-xl font-bold text-white mb-2">Password Updated</h2>
-                  <p className="text-sm text-zinc-500">Your password has been changed successfully.</p>
+                  <h2 className="text-xl font-bold text-white mb-2">
+                    Password Updated
+                  </h2>
+                  <p className="text-sm text-zinc-500">
+                    Your password has been changed successfully.
+                  </p>
                 </div>
               ) : (
                 <>
-                  <h2 className="text-xl font-bold text-white mb-2">Change Password</h2>
-                  <p className="text-sm text-zinc-500 mb-6">Enter your current password and a new one.</p>
+                  <h2 className="text-xl font-bold text-white mb-2">
+                    Change Password
+                  </h2>
+                  <p className="text-sm text-zinc-500 mb-6">
+                    Enter your current password and a new one.
+                  </p>
 
                   <form onSubmit={handleChangePassword} className="space-y-4">
                     <div className="relative">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Current Password</label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">
+                        Current Password
+                      </label>
                       <input
                         type={showOldPassword ? "text" : "password"}
                         value={passwordData.old_password}
-                        onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
+                        onChange={(e) =>
+                          setPasswordData({
+                            ...passwordData,
+                            old_password: e.target.value,
+                          })
+                        }
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white outline-none focus:border-white/20 transition-colors"
                         required
                       />
@@ -359,16 +426,27 @@ export default function SettingsPage() {
                         onClick={() => setShowOldPassword(!showOldPassword)}
                         className="absolute right-4 top-[38px] text-zinc-500 hover:text-white transition-colors"
                       >
-                        {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showOldPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
 
                     <div className="relative">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">New Password</label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">
+                        New Password
+                      </label>
                       <input
                         type={showNewPassword ? "text" : "password"}
                         value={passwordData.new_password1}
-                        onChange={(e) => setPasswordData({ ...passwordData, new_password1: e.target.value })}
+                        onChange={(e) =>
+                          setPasswordData({
+                            ...passwordData,
+                            new_password1: e.target.value,
+                          })
+                        }
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white outline-none focus:border-white/20 transition-colors"
                         required
                       />
@@ -377,31 +455,52 @@ export default function SettingsPage() {
                         onClick={() => setShowNewPassword(!showNewPassword)}
                         className="absolute right-4 top-[38px] text-zinc-500 hover:text-white transition-colors"
                       >
-                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showNewPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                       {passwordErrors.new_password1 && (
-                        <p className="text-[10px] text-red-400 mt-1">{passwordErrors.new_password1[0]}</p>
+                        <p className="text-[10px] text-red-400 mt-1">
+                          {passwordErrors.new_password1[0]}
+                        </p>
                       )}
                     </div>
 
                     <div className="relative">
-                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">Confirm New Password</label>
+                      <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 block">
+                        Confirm New Password
+                      </label>
                       <input
                         type={showConfirmPassword ? "text" : "password"}
                         value={passwordData.new_password2}
-                        onChange={(e) => setPasswordData({ ...passwordData, new_password2: e.target.value })}
+                        onChange={(e) =>
+                          setPasswordData({
+                            ...passwordData,
+                            new_password2: e.target.value,
+                          })
+                        }
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white outline-none focus:border-white/20 transition-colors"
                         required
                       />
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
                         className="absolute right-4 top-[38px] text-zinc-500 hover:text-white transition-colors"
                       >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                       {passwordErrors.new_password2 && (
-                        <p className="text-[10px] text-red-400 mt-1">{passwordErrors.new_password2[0]}</p>
+                        <p className="text-[10px] text-red-400 mt-1">
+                          {passwordErrors.new_password2[0]}
+                        </p>
                       )}
                     </div>
 
@@ -463,9 +562,12 @@ export default function SettingsPage() {
                 <AlertTriangle className="w-8 h-8 text-red-400" />
               </div>
 
-              <h2 className="text-xl font-bold text-white mb-2 text-center">Delete Account</h2>
+              <h2 className="text-xl font-bold text-white mb-2 text-center">
+                Delete Account
+              </h2>
               <p className="text-sm text-zinc-500 mb-6 text-center">
-                This action is permanent and cannot be undone. All your data, orders, and profile information will be erased.
+                This action is permanent and cannot be undone. All your data,
+                orders, and profile information will be erased.
               </p>
 
               <div className="mb-6">

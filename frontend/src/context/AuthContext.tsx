@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User } from "@/types";
 import { authService } from "@/services/authService";
+import { hasAuthSessionHint, setAuthSessionHint } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +12,7 @@ interface AuthContextType {
   loading: boolean;
   login: (data: { user: User }) => void;
   logout: () => void;
+  logoutLocal: (redirectTo?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,27 +23,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Initial user fetch
-    authService
-      .getUser()
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    const fetchUser = async () => {
+      if (!hasAuthSessionHint()) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const user = await authService.getUser();
+        setAuthSessionHint(true);
+        setUser(user);
+      } catch {
+        setAuthSessionHint(false);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
 
     // Multi-tab synchronization
     const syncTabs = (event: StorageEvent) => {
       if (event.key === "synthetix_auth_sync") {
+        if (!hasAuthSessionHint()) {
+          setUser(null);
+          setLoading(false);
+          if (window.location.pathname !== "/auth/login") {
+            router.push("/auth/login");
+          }
+          return;
+        }
+
         setLoading(true);
-        authService
-          .getUser()
-          .then(setUser)
-          .catch(() => {
+        const syncUser = async () => {
+          try {
+            const user = await authService.getUser();
+            setAuthSessionHint(true);
+            setUser(user);
+          } catch {
+            setAuthSessionHint(false);
             setUser(null);
             if (window.location.pathname !== "/auth/login") {
               router.push("/auth/login");
             }
-          })
-          .finally(() => setLoading(false));
+          } finally {
+            setLoading(false);
+          }
+        };
+        syncUser();
       }
     };
 
@@ -52,26 +83,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   const login = (userData: { user: User }) => {
+    setAuthSessionHint(true);
     localStorage.setItem("synthetix_auth_sync", Date.now().toString());
     setUser(userData.user);
     router.push("/");
   };
 
-  const logout = async () => {
+  const logoutLocal = (redirectTo: string = "/auth/login") => {
+    setAuthSessionHint(false);
+    setUser(null);
+    setLoading(false);
     localStorage.setItem("synthetix_auth_sync", Date.now().toString());
+    router.push(redirectTo);
+  };
+
+  const logout = async () => {
     try {
       // We call logout but don't care if it fails (e.g. already logged out)
       await authService.logout();
-    } catch (err) {
+    } catch {
       logger.warn("Logout request failed, clearing local state anyway", { component: "AuthContext" });
     } finally {
-      setUser(null);
-      router.push("/auth/login");
+      logoutLocal();
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, logoutLocal }}>
       {children}
     </AuthContext.Provider>
   );

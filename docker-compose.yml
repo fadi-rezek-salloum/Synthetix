@@ -20,18 +20,21 @@ services:
 
   backend:
     build: ./backend
-    volumes:
-      - ./backend:/app
+    restart: unless-stopped
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/media:/app/media
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/synthetix
       - REDIS_URL=redis://redis:6379/0
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - DJANGO_DEBUG=${DJANGO_DEBUG}
-      - FRONTEND_URL=http://localhost:3000
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - FRONTEND_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,frontend,0.0.0.0
     depends_on:
       db:
         condition: service_healthy
@@ -45,20 +48,19 @@ services:
       start_period: 30s
 
   frontend:
-    build: ./frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
+    build: 
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+        - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+        - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
       - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
-      - NEXT_PUBLIC_SITE_URL=http://localhost:3000
-      - WATCHPACK_POLLING=true
-      - CHOKIDAR_USEPOLLING=1
-
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
     depends_on:
       backend:
         condition: service_healthy

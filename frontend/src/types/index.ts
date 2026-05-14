@@ -1,3 +1,4 @@
+// ─── Shared API helpers ───────────────────────────────────────────────────────
 export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
@@ -5,12 +6,13 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+// ─── Catalog ─────────────────────────────────────────────────────────────────
 export interface Category {
   id: number;
   name: string;
   slug: string;
-  description: string | null;
-  image: string | null;
+  parent: number | null;
+  children?: Category[];
 }
 
 export interface ProductImage {
@@ -27,6 +29,24 @@ export interface ProductVariant {
   color: string;
   stock: number;
   price_override: string | null;
+  sku?: string | null;
+}
+
+export interface Review {
+  id: number;
+  product: number;
+  user: number;
+  user_email: string;
+  user_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+export interface PriceHistory {
+  id: number;
+  price: string;
+  recorded_at: string;
 }
 
 export interface Product {
@@ -34,18 +54,27 @@ export interface Product {
   name: string;
   slug: string;
   brand: string;
+  gender: "M" | "W" | "U";
+  description: string;
   base_price: string;
   discount_price: string | null;
+  category: number;
   category_name: string;
+  is_featured: boolean;
+  is_active?: boolean;
   images: ProductImage[];
   variants: ProductVariant[];
+  reviews?: Review[];
+  price_history?: PriceHistory[];
   ai_description?: string;
   ai_style_tags?: string[];
 }
 
+// ─── Accounts ────────────────────────────────────────────────────────────────
 export interface User {
   id: number;
   email: string;
+  username?: string;
   first_name: string;
   last_name?: string;
   role: "CUSTOMER" | "SELLER" | "ADMIN";
@@ -57,6 +86,9 @@ export interface User {
 
 export interface Address {
   id: number;
+  address_type: "SHIPPING" | "BILLING";
+  first_name: string;
+  last_name: string;
   street_address: string;
   city: string;
   state_province: string;
@@ -65,12 +97,33 @@ export interface Address {
   is_default: boolean;
 }
 
+export interface CustomerProfile {
+  id: number;
+  avatar: string | null;
+  shipping_address: string;
+  preferred_size_top: string;
+  preferred_size_bottom: string;
+  ai_style_preferences: string[];
+}
+
+export interface SellerProfile {
+  id: number;
+  store_name: string;
+  store_logo: string | null;
+  description: string;
+  tax_id: string;
+  is_verified: boolean;
+  created_at: string;
+}
+
+// ─── Wishlist ─────────────────────────────────────────────────────────────────
 export interface Wishlist {
   id: number;
   products: Product[];
   updated_at: string;
 }
 
+// ─── Cart ────────────────────────────────────────────────────────────────────
 export interface CartItem {
   id: number;
   variant: ProductVariant & { product: Product };
@@ -85,6 +138,7 @@ export interface Cart {
   updated_at: string;
 }
 
+// ─── Orders ──────────────────────────────────────────────────────────────────
 export interface OrderItem {
   id: number;
   product: Product;
@@ -103,6 +157,7 @@ export interface Order {
   created_at: string;
 }
 
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 export interface LoginCredentials {
   email: string;
   password?: string;
@@ -116,11 +171,16 @@ export interface RegisterCredentials {
   first_name: string;
   last_name: string;
   phone_number?: string;
-  // Profile Media
   avatar?: File | null;
   logo?: File | null;
-  // Seller Profile Fields
   store_name?: string;
   role: "CUSTOMER" | "SELLER";
 }
 
+// ─── Intelligence ─────────────────────────────────────────────────────────────
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}

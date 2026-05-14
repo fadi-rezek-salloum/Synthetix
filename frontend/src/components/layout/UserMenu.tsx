@@ -14,6 +14,7 @@ import {
   Heart,
   Package,
 } from "lucide-react";
+import { resolveBackendUrl } from "@/lib/utils";
 
 const UserMenu = () => {
   const { user, logout } = useAuth();
@@ -33,9 +34,7 @@ const UserMenu = () => {
   if (!user) return null;
 
   const avatarUrl = user.avatar || user.logo;
-  const fullAvatarUrl = avatarUrl 
-    ? (avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${avatarUrl}`)
-    : null;
+  const fullAvatarUrl = resolveBackendUrl(avatarUrl);
 
   return (
     <div className="relative" ref={menuRef}>

@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { wishlistService } from "@/services/wishlistService";
 import { orderService } from "@/services/orderService";
 import { logger } from "@/lib/logger";
+import { resolveBackendUrl } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { User, Mail, Package, Heart, MapPin, CreditCard } from "lucide-react";
 import { Order, Product } from "@/types";
@@ -60,9 +61,7 @@ export default function ProfilePage() {
   }
 
   const avatarUrl = user.avatar || user.logo;
-  const fullAvatarUrl = avatarUrl 
-    ? (avatarUrl.startsWith('http') ? avatarUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${avatarUrl}`)
-    : null;
+  const fullAvatarUrl = resolveBackendUrl(avatarUrl);
 
   return (
     <main className="min-h-screen bg-black pt-32 pb-24 px-6">

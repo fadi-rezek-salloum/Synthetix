@@ -5,6 +5,7 @@ Centralizes duplicate code and provides reusable methods
 
 import requests
 import phonenumbers
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -22,6 +23,7 @@ from .serializers import UserSerializer
 User = get_user_model()
 
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
+GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
 GOOGLE_REQUEST_TIMEOUT = 10
 MAX_AVATAR_SIZE = 5 * 1024 * 1024  # 5MB
 
@@ -38,6 +40,14 @@ class GoogleAuthService:
         if not token:
             return None
 
+        if token.count(".") == 2:
+            return GoogleAuthService.verify_google_identity_token(token)
+
+        return GoogleAuthService.verify_google_access_token(token)
+
+    @staticmethod
+    def verify_google_access_token(token: str) -> dict | None:
+        """Verify Google OAuth access token via the userinfo endpoint."""
         try:
             response = requests.get(
                 GOOGLE_USERINFO_URL,
@@ -49,6 +59,37 @@ class GoogleAuthService:
                 return None
 
             return response.json()
+        except requests.RequestException:
+            return None
+
+    @staticmethod
+    def verify_google_identity_token(token: str) -> dict | None:
+        """Verify Google credential ID token and normalize profile fields."""
+        client_id = getattr(settings, "GOOGLE_CLIENT_ID", "")
+        if not client_id:
+            return None
+
+        try:
+            response = requests.get(
+                GOOGLE_TOKENINFO_URL,
+                params={"id_token": token},
+                timeout=GOOGLE_REQUEST_TIMEOUT,
+            )
+
+            if not response.ok:
+                return None
+
+            data = response.json()
+            if data.get("aud") != client_id or data.get("email_verified") not in {True, "true", "True"}:
+                return None
+
+            return {
+                "sub": data.get("sub"),
+                "email": data.get("email"),
+                "given_name": data.get("given_name", ""),
+                "family_name": data.get("family_name", ""),
+                "picture": data.get("picture", ""),
+            }
         except requests.RequestException:
             return None
 
@@ -115,6 +156,21 @@ class GoogleAuthService:
             return True
         except Exception:
             return False
+
+    @staticmethod
+    def ensure_google_avatar(user: User, google_data: dict) -> None:
+        """Populate or repair a customer's Google avatar when possible."""
+        avatar_url = google_data.get("picture")
+        if not avatar_url:
+            return
+
+        profile, _ = CustomerProfile.objects.get_or_create(user=user)
+        if profile.avatar and profile.avatar.storage.exists(profile.avatar.name):
+            return
+
+        avatar_content = GoogleAuthService.download_avatar(avatar_url, user.id)
+        if avatar_content:
+            GoogleAuthService.save_avatar_to_profile(user, avatar_content)
 
     @staticmethod
     def create_social_account(user: User, google_data: dict, request) -> bool:
@@ -189,6 +245,19 @@ class GoogleAuthService:
         }
 
     @staticmethod
+    def login_existing_google_user(email: str) -> dict:
+        """Generate JWT response for an existing Google-authenticated user."""
+        user = User.objects.get(email=email)
+        access, refresh = jwt_encode(user)
+        user.refresh_from_db()
+
+        return {
+            "user": UserSerializer(user).data,
+            "access": str(access),
+            "refresh": str(refresh),
+        }
+
+    @staticmethod
     def get_check_response(token: str) -> Response:
         """
         Check if user exists and return their info
@@ -209,9 +278,13 @@ class GoogleAuthService:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        existing_user = User.objects.filter(email=email).first()
+        if existing_user:
+            GoogleAuthService.ensure_google_avatar(existing_user, google_data)
+
         return Response(
             {
-                "exists": GoogleAuthService.check_user_exists(email),
+                "exists": existing_user is not None,
                 "email": email,
                 "first_name": google_data.get("given_name", ""),
                 "last_name": google_data.get("family_name", ""),

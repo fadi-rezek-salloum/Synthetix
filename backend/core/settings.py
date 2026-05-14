@@ -161,14 +161,15 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS",
-    [FRONTEND_URL, "http://127.0.0.1:3000"],
+    [FRONTEND_URL, "http://127.0.0.1:3000", "http://localhost:3001", "http://localhost:3002"],
 )
 CSRF_TRUSTED_ORIGINS = env_list(
     "CSRF_TRUSTED_ORIGINS",
-    [FRONTEND_URL, "http://127.0.0.1:3000"],
+    [FRONTEND_URL, "http://127.0.0.1:3000", "http://localhost:3001", "http://localhost:3002"],
 )
 
 
@@ -217,3 +218,46 @@ SOCIALACCOUNT_PROVIDERS = {
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_QUERY_EMAIL = True
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{levelname}] {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "[{levelname}] {module}: {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple" if DEBUG else "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "accounts": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "catalog": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "orders": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "intelligence": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+    },
+}
+

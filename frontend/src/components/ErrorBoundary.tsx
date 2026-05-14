@@ -86,11 +86,23 @@ export class ErrorBoundary extends Component<Props, State> {
               )}
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="mb-6 p-4 bg-zinc-900/50 border border-red-500/20 rounded-lg text-left">
-                <p className="text-[10px] font-mono text-red-400 break-all">
-                  {this.state.error.message}
+            {this.state.error && (
+              <div className="mb-6 p-4 bg-zinc-900/50 border border-red-500/20 rounded-lg text-left overflow-hidden">
+                <p className="text-[10px] font-mono text-red-400 break-all whitespace-pre-wrap">
+                  {typeof this.state.error === 'string' 
+                    ? this.state.error 
+                    : this.state.error instanceof Error 
+                      ? this.state.error.message 
+                      : JSON.stringify(this.state.error, null, 2)}
                 </p>
+                {this.state.error instanceof Error && this.state.error.stack && (
+                  <details className="mt-2">
+                    <summary className="text-[8px] text-zinc-500 cursor-pointer hover:text-zinc-400">View Stack Trace</summary>
+                    <pre className="text-[8px] text-zinc-600 mt-2 max-h-40 overflow-auto">
+                      {this.state.error.stack}
+                    </pre>
+                  </details>
+                )}
               </div>
             )}
 

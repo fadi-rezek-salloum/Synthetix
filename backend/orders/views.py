@@ -17,10 +17,7 @@ class CartViewSet(viewsets.ModelViewSet):
         )
 
     def get_object(self):
-        obj, _ = Cart.objects.prefetch_related(
-            "items__variant__product__images",
-            "items__variant__product__variants"
-        ).get_or_create(user=self.request.user)
+        obj, _ = Cart.objects.get_or_create(user=self.request.user)
         return obj
 
     @action(detail=False, methods=['post'])
@@ -82,6 +79,7 @@ class CartViewSet(viewsets.ModelViewSet):
                 cart_item.quantity = quantity
                 
             cart_item.save()
+            cart = self.get_queryset().get(id=cart.id)
             return Response(CartSerializer(cart).data)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -96,6 +94,7 @@ class CartViewSet(viewsets.ModelViewSet):
             cart = self.get_object()
             item = CartItem.objects.get(id=item_id, cart=cart)
             item.delete()
+            cart = self.get_queryset().get(id=cart.id)
             return Response(CartSerializer(cart).data)
         except CartItem.DoesNotExist:
             return Response({"error": "Item not found in your cart"}, status=status.HTTP_404_NOT_FOUND)
@@ -125,6 +124,7 @@ class CartViewSet(viewsets.ModelViewSet):
                 )
             item.quantity = quantity
             item.save()
+            cart = self.get_queryset().get(id=cart.id)
             return Response(CartSerializer(cart).data)
         except CartItem.DoesNotExist:
             return Response({"error": "Item not found in your cart"}, status=status.HTTP_404_NOT_FOUND)
@@ -135,8 +135,14 @@ class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).prefetch_related(
-            "items__product__images"
+        return (
+            Order.objects.filter(user=self.request.user)
+            .select_related("user")
+            .prefetch_related(
+                "items__product__images",
+                "items__product__variants",
+                "items__product__category",
+            )
         )
 
     @action(detail=False, methods=['post'])

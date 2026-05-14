@@ -78,6 +78,12 @@ export const authService = {
       body: JSON.stringify({ access_token: accessToken }),
     });
   },
+  socialCredentialLogin: async (provider: "google", credential: string) => {
+    return await apiFetch<LoginResponse>(`/accounts/auth/${provider}/credential/`, {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    });
+  },
   socialCheck: async (provider: "google", accessToken: string) => {
     return await apiFetch<SocialCheckResponse>(`/accounts/auth/${provider}/check/`, {
       method: "POST",

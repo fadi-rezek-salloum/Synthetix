@@ -31,8 +31,10 @@ class WishlistViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Wishlist.objects.filter(user=self.request.user).prefetch_related(
-            "products__images", "products__variants"
-        )
+            "products__images",
+            "products__variants",
+            "products__reviews__user",
+        ).select_related()
 
     def get_object(self):
         obj, _ = Wishlist.objects.get_or_create(user=self.request.user)
@@ -74,8 +76,10 @@ class ProductFilter(django_filters.FilterSet):
 
 class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
-    queryset = Category.objects.filter(parent=None)
     serializer_class = CategorySerializer
+
+    def get_queryset(self):
+        return Category.objects.select_related("parent").prefetch_related("children")
 
 
 class ProductViewSet(viewsets.ModelViewSet):

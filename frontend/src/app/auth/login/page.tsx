@@ -112,7 +112,7 @@ const LoginPage = () => {
           {errors.detail && !errors.email && (
             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
-              {errors.detail}
+              {typeof errors.detail === 'string' ? errors.detail : JSON.stringify(errors.detail)}
             </div>
           )}
           <button

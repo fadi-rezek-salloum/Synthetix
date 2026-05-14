@@ -10,7 +10,7 @@ interface LogContext {
   context?: string;
   userId?: number;
   component?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class Logger {
